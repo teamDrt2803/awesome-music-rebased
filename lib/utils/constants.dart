@@ -7,6 +7,7 @@ const kSecondaryColor = Color(0xFF979797);
 
 //Strings
 const notificationChanelId = 'com.teamdrt.awesomemusic.channel.audio';
+const downloadPortName = 'varanasi_download_port';
 
 //Evnet Name
 const updateMediaItemCustomEvent = 'updateMediaItem';

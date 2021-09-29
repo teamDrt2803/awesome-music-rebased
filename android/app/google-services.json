@@ -1,0 +1,47 @@
+{
+    "project_info": {
+      "project_number": "248255300915",
+      "project_id": "project-varanasi",
+      "storage_bucket": "project-varanasi.appspot.com"
+    },
+    "client": [
+      {
+        "client_info": {
+          "mobilesdk_app_id": "1:248255300915:android:3b01a7748e74699eabea46",
+          "android_client_info": {
+            "package_name": "com.teamdrt.varanasi"
+          }
+        },
+        "oauth_client": [
+          {
+            "client_id": "248255300915-qlk5gcudbmdtqet8er3nou0r9qc2r1sk.apps.googleusercontent.com",
+            "client_type": 1,
+            "android_info": {
+              "package_name": "com.teamdrt.varanasi",
+              "certificate_hash": "46fad192b917c216a5f39a79cba54e4db4f971b8"
+            }
+          },
+          {
+            "client_id": "248255300915-mh9h7hitp7ei39nmvihlj077ccibdr79.apps.googleusercontent.com",
+            "client_type": 3
+          }
+        ],
+        "api_key": [
+          {
+            "current_key": "AIzaSyB5eQTNFbkYDHHW69ZolBlmzyoe_SLdgd4"
+          }
+        ],
+        "services": {
+          "appinvite_service": {
+            "other_platform_oauth_client": [
+              {
+                "client_id": "248255300915-mh9h7hitp7ei39nmvihlj077ccibdr79.apps.googleusercontent.com",
+                "client_type": 3
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "configuration_version": "1"
+  }

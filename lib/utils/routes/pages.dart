@@ -12,5 +12,7 @@ List<GetPage> get pages => [
         name: Routes.fullScreenPlayer,
         transition: Transition.cupertinoDialog,
         page: () => const FullScreenPlayer(),
+        fullscreenDialog: true,
+        preventDuplicates: true,
       ),
     ];

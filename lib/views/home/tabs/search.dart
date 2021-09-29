@@ -1,3 +1,4 @@
+import 'package:awesome_music_rebased/controllers/download_controller.dart';
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
 import 'package:awesome_music_rebased/utils/constants.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -22,82 +23,89 @@ class SearchScreen extends GetView<SongController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 24, bottom: 16),
-                      child: Text(
-                        'Trending Artists',
-                        style: Theme.of(context).textTheme.headline6?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.8,
-                              color: colorBrandPrimary,
-                            ),
+                    if (controller
+                        .topSearchResult.value!.artists.isNotEmpty) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(left: 24, bottom: 16),
+                        child: Text(
+                          'Trending Artists',
+                          style:
+                              Theme.of(context).textTheme.headline6?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.8,
+                                    color: colorBrandPrimary,
+                                  ),
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      height: Get.width * 0.6,
-                      child: ListView.separated(
-                        separatorBuilder: (_, index) =>
-                            const SizedBox(width: 32),
-                        shrinkWrap: true,
-                        scrollDirection: Axis.horizontal,
-                        itemCount:
-                            controller.topSearchResult.value!.artists.length,
-                        itemBuilder: (_, index) {
-                          return Padding(
-                            padding: index == 0
-                                ? const EdgeInsets.only(left: 24)
-                                : index ==
-                                        controller.topSearchResult.value!
-                                                .artists.length -
-                                            1
-                                    ? const EdgeInsets.only(right: 24)
-                                    : EdgeInsets.zero,
-                            child: ArtistWidget(
-                              artist: controller
-                                  .topSearchResult.value!.artists[index],
-                            ),
-                          );
-                        },
+                      SizedBox(
+                        height: Get.width * 0.6,
+                        child: ListView.separated(
+                          separatorBuilder: (_, index) =>
+                              const SizedBox(width: 32),
+                          shrinkWrap: true,
+                          scrollDirection: Axis.horizontal,
+                          itemCount:
+                              controller.topSearchResult.value!.artists.length,
+                          itemBuilder: (_, index) {
+                            return Padding(
+                              padding: index == 0
+                                  ? const EdgeInsets.only(left: 24)
+                                  : index ==
+                                          controller.topSearchResult.value!
+                                                  .artists.length -
+                                              1
+                                      ? const EdgeInsets.only(right: 24)
+                                      : EdgeInsets.zero,
+                              child: ArtistWidget(
+                                artist: controller
+                                    .topSearchResult.value!.artists[index],
+                              ),
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 24, bottom: 16),
-                      child: Text(
-                        'Trending Songs',
-                        style: Theme.of(context).textTheme.headline6?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.8,
-                              color: colorBrandPrimary,
-                            ),
+                    ],
+                    if (controller.topSearchResult.value!.songs.isNotEmpty) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(left: 24, bottom: 16),
+                        child: Text(
+                          'Trending Songs',
+                          style:
+                              Theme.of(context).textTheme.headline6?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.8,
+                                    color: colorBrandPrimary,
+                                  ),
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      height: 210,
-                      child: ListView.separated(
-                        separatorBuilder: (_, index) =>
-                            const SizedBox(width: 32),
-                        shrinkWrap: true,
-                        scrollDirection: Axis.horizontal,
-                        itemCount:
-                            controller.topSearchResult.value!.songs.length,
-                        itemBuilder: (_, index) {
-                          return Padding(
-                            padding: index == 0
-                                ? const EdgeInsets.only(left: 24)
-                                : index ==
-                                        controller.topSearchResult.value!.songs
-                                                .length -
-                                            1
-                                    ? const EdgeInsets.only(right: 24)
-                                    : EdgeInsets.zero,
-                            child: SongResultWidget(
-                              song: controller
-                                  .topSearchResult.value!.songs[index],
-                            ),
-                          );
-                        },
+                      SizedBox(
+                        height: 210,
+                        child: ListView.separated(
+                          separatorBuilder: (_, index) =>
+                              const SizedBox(width: 32),
+                          shrinkWrap: true,
+                          scrollDirection: Axis.horizontal,
+                          itemCount:
+                              controller.topSearchResult.value!.songs.length,
+                          itemBuilder: (_, index) {
+                            return Padding(
+                              padding: index == 0
+                                  ? const EdgeInsets.only(left: 24)
+                                  : index ==
+                                          controller.topSearchResult.value!
+                                                  .songs.length -
+                                              1
+                                      ? const EdgeInsets.only(right: 24)
+                                      : EdgeInsets.zero,
+                              child: SongResultWidget(
+                                song: controller
+                                    .topSearchResult.value!.songs[index],
+                              ),
+                            );
+                          },
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
         ),
@@ -114,43 +122,65 @@ class SongResultWidget extends GetView<SongController> {
   final SongSearchResult song;
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        controller.playSongFromModal(song);
-      },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Expanded(
-            child: Container(
-              width: 180,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                image: DecorationImage(
-                  image: CachedNetworkImageProvider(song.image),
-                  fit: BoxFit.cover,
-                ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Expanded(
+          child: Container(
+            width: 180,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              image: DecorationImage(
+                image: CachedNetworkImageProvider(song.image),
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  CircleAvatar(
+                    backgroundColor: colorBrandPrimary,
+                    foregroundColor: Colors.white,
+                    child: IconButton(
+                      onPressed: () {
+                        controller.playSongFromModal(song);
+                      },
+                      icon: const Icon(Icons.play_arrow),
+                    ),
+                  ),
+                  CircleAvatar(
+                    backgroundColor: colorBrandPrimary,
+                    foregroundColor: Colors.white,
+                    child: IconButton(
+                      onPressed: () {
+                        Get.find<DownloadController>().download(song);
+                      },
+                      icon: const Icon(Icons.download),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            song.title,
-            style: Theme.of(context)
-                .textTheme
-                .subtitle1
-                ?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1),
-          ),
-          Text(
-            describeEnum(song.type)[0].toUpperCase() +
-                describeEnum(song.type).substring(1),
-            style: Theme.of(context)
-                .textTheme
-                .subtitle1
-                ?.copyWith(letterSpacing: 1, color: Colors.black54),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          song.title,
+          style: Theme.of(context)
+              .textTheme
+              .subtitle1
+              ?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1),
+        ),
+        Text(
+          describeEnum(song.type)[0].toUpperCase() +
+              describeEnum(song.type).substring(1),
+          style: Theme.of(context)
+              .textTheme
+              .subtitle1
+              ?.copyWith(letterSpacing: 1, color: Colors.black54),
+        ),
+      ],
     );
   }
 }

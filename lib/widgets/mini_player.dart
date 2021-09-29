@@ -1,5 +1,7 @@
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
+import 'package:awesome_music_rebased/utils/constants.dart';
 import 'package:awesome_music_rebased/utils/routes/routes.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_state_manager/get_state_manager.dart';
@@ -12,6 +14,7 @@ class MiniPlayer extends GetView<SongController> {
     return Obx(
       () {
         final song = controller.currentSong.value;
+        debugPrint(song?.id);
         return song == null
             ? const SizedBox.shrink()
             : InkWell(
@@ -32,7 +35,13 @@ class MiniPlayer extends GetView<SongController> {
                       tag: song.id,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(5),
-                        child: Image.network(song.artUri.toString()),
+                        child: CachedNetworkImage(
+                          imageUrl: song.artUri.toString(),
+                          placeholder: (_, __) => const Icon(
+                            Icons.music_note_outlined,
+                            color: colorBrandPrimary,
+                          ),
+                        ),
                       ),
                     ),
                     title: Text(
@@ -44,7 +53,7 @@ class MiniPlayer extends GetView<SongController> {
                     subtitle: Text(
                       (song.displaySubtitle == null ||
                               song.displaySubtitle!.isEmpty)
-                          ? song.album!
+                          ? song.album ?? song.title
                           : song.displaySubtitle!,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -67,21 +76,20 @@ class MiniPlayer extends GetView<SongController> {
                               icon: const Icon(Icons.skip_previous_outlined),
                             ),
                           ),
-                          Expanded(
-                            child: IconButton(
-                              onPressed: () {
-                                if (controller.isPlaying) {
-                                  controller.audioHandler.pause();
-                                } else {
-                                  controller.audioHandler.play();
-                                }
-                              },
-                              icon: Icon(
-                                controller.isPlaying
-                                    ? Icons.pause_outlined
-                                    : Icons.play_arrow_outlined,
-                              ),
+                          IconButton(
+                            onPressed: () {
+                              if (controller.isPlaying) {
+                                controller.audioHandler.pause();
+                              } else {
+                                controller.audioHandler.play();
+                              }
+                            },
+                            icon: Icon(
+                              controller.isPlaying
+                                  ? Icons.pause_outlined
+                                  : Icons.play_arrow_outlined,
                             ),
+                            iconSize: 36,
                           ),
                           Expanded(
                             child: IconButton(
@@ -93,14 +101,14 @@ class MiniPlayer extends GetView<SongController> {
                               icon: const Icon(Icons.skip_next_outlined),
                             ),
                           ),
-                          Expanded(
-                            child: IconButton(
-                              onPressed: () {
-                                controller.audioHandler.stop();
-                              },
-                              icon: const Icon(Icons.stop_outlined),
-                            ),
-                          )
+                          // Expanded(
+                          //   child: IconButton(
+                          //     onPressed: () {
+                          //       controller.audioHandler.stop();
+                          //     },
+                          //     icon: const Icon(Icons.stop_outlined),
+                          //   ),
+                          // )
                         ],
                       ),
                     ),
