@@ -90,8 +90,10 @@ class SongController extends GetxController {
             await jioSaavnWrapper.fetchSongDetails(songId: song.id);
         debugPrint('Fetched song details for song ${songResult.title}');
         await audioHandler.addQueueItem(songResult.mediaItem);
-        await audioHandler.skipToQueueItem(queueStream
-            .indexWhere((element) => element.id == songResult.mediaItem.id));
+        await audioHandler.skipToQueueItem(
+          queueStream
+              .indexWhere((element) => element.id == songResult.mediaItem.id),
+        );
       } catch (e) {
         debugPrintStack();
       }

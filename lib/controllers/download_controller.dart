@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:audio_service/audio_service.dart';
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
 import 'package:awesome_music_rebased/utils/constants.dart';
+import 'package:awesome_music_rebased/utils/extensions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -14,7 +15,6 @@ import 'package:jiosaavn_wrapper/modals/search_result.dart';
 // ignore: depend_on_referenced_packages
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:awesome_music_rebased/utils/extensions.dart';
 
 class DownloadController extends GetxController {
   late Directory downloadPath;
@@ -30,6 +30,9 @@ class DownloadController extends GetxController {
         url: song.id,
         savedDir: downloadPath.path,
         fileName: '${song.title}.${song.id.split('.').last}',
+        openFileFromNotification: false,
+
+        ///FIXME: Find the reason why disabling this lets the file to be donwloaded succesffully
       );
       if (taskId != null) {
         ScaffoldMessenger.of(Get.overlayContext!).showSnackBar(
@@ -74,12 +77,12 @@ class DownloadController extends GetxController {
     if (downloadBox.containsKey(downloadCallback.id)) {
       final downloadedSong =
           DownloadedSong.fromMap(downloadBox.get(downloadCallback.id));
-      if (downloadCallback.status == DownloadTaskStatus.failed ||
-          downloadCallback.status == DownloadTaskStatus.canceled) {
-        await delete(downloadCallback.id);
-        return;
-      }
-      if (downloadCallback.status == DownloadTaskStatus.complete) {
+      // if (downloadCallback.status == DownloadTaskStatus.failed ||
+      //     downloadCallback.status == DownloadTaskStatus.canceled) {
+      //   await delete(downloadCallback.id);
+      //   return;
+      // }
+      if (downloadCallback.progress == 100) {
         debugPrint(
           'Filed existing status is: ${File(downloadedSong.fileLocation).existsSync()}',
         );
@@ -92,7 +95,7 @@ class DownloadController extends GetxController {
               ),
             ),
           );
-          await delete(downloadCallback.id);
+          // await delete(downloadCallback.id);
         } else {
           downloadBox.put(
             downloadCallback.id,
