@@ -1,7 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:awesome_music_rebased/utils/constants.dart';
 import 'package:awesome_music_rebased/utils/extensions.dart';
-import 'package:awesome_music_rebased/widgets/mini_player.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -26,8 +25,6 @@ class SongController extends GetxController {
   Rx<ProcessingState> processingStateStream = Rx(ProcessingState.idle);
   Rx<PlaybackEvent> playBackStream = Rx(PlaybackEvent());
   Rx<Duration> positionStream = Rx(Duration.zero);
-  OverlayEntry miniPlayerEntry =
-      OverlayEntry(builder: (context) => const MiniPlayer());
   late AudioHandler audioHandler;
   AudioPlayer audioPlayer = AudioPlayer();
   late PageController fullScreenThumbController;
@@ -59,7 +56,9 @@ class SongController extends GetxController {
     for (final item in topSongs.value!.songs) {
       mediaItems.add(item.mediaItem);
     }
-    if (mediaItems.isNotEmpty) audioHandler.addQueueItems(mediaItems);
+    if (mediaItems.isNotEmpty) {
+      await audioHandler.addQueueItems(mediaItems);
+    }
   }
 
   bool get showMiniPlayer {
@@ -85,16 +84,23 @@ class SongController extends GetxController {
 
   Future<void> playSongFromModal(dynamic song) async {
     if (song is SongSearchResult) {
-      final songResult =
-          await jioSaavnWrapper.fetchSongDetails(songId: song.id);
-      audioHandler.playMediaItem(songResult.mediaItem);
+      try {
+        debugPrint('Fetching song details for song ${song.title}');
+        final songResult =
+            await jioSaavnWrapper.fetchSongDetails(songId: song.id);
+        debugPrint('Fetched song details for song ${songResult.title}');
+        await audioHandler.addQueueItem(songResult.mediaItem);
+        await audioHandler.skipToQueueItem(queueStream
+            .indexWhere((element) => element.id == songResult.mediaItem.id));
+      } catch (e) {
+        debugPrintStack();
+      }
       debugPrint(song.id);
     }
   }
 
-  bool isThisSongPlaying(Song topSong) {
-    return currentSong.value?.id == topSong.mediaURL && isPlaying;
-  }
+  bool isThisSongPlaying(Song topSong) =>
+      currentSong.value?.id == topSong.mediaURL && isPlaying;
 
   Song? get topSongPlaying {
     return showMiniPlayer
@@ -120,16 +126,25 @@ class SongController extends GetxController {
     }
   }
 
-  void handleCurrentSongIndexUpdate(int? index) {
+  Future<void> handleCurrentSongIndexUpdate(int? index) async {
+    audioHandler.customAction(updateMediaItemCustomEvent, {'index': index});
     debugPrint('Current Index is $index');
     if (index != null && fullScreenThumbController.hasClients) {
-      fullScreenThumbController.animateToPage(
+      await fullScreenThumbController.animateToPage(
         index,
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeIn,
       );
+      debugPrint(
+        'Changing Thumbnail Image to $index',
+      );
+    } else {
+      debugPrint('No Clients attached');
     }
-    audioHandler.customAction(updateMediaItemCustomEvent, {'index': index});
+  }
+
+  void _handleQueueStream(List<MediaItem> mediaItem) {
+    debugPrint('MediaList Updated');
   }
 
   Future<void> preparePageController(int index) async {
@@ -156,9 +171,11 @@ class SongController extends GetxController {
         androidNotificationOngoing: true,
       ),
     );
-    fullScreenThumbController = PageController();
+    await audioHandler.prepare();
+    fullScreenThumbController = PageController(keepPage: false);
     ever(currentIndex, handleCurrentSongIndexUpdate);
     ever(currentSong, _handleCurrentMediaItemUpdate);
+    ever(queueStream, _handleQueueStream);
     currentSong.bindStream(audioHandler.mediaItem);
     currentIndex.bindStream(audioPlayer.currentIndexStream);
     playingStream.bindStream(audioPlayer.playingStream);

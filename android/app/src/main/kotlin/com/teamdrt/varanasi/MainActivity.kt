@@ -1,4 +1,4 @@
-package com.teamdrt.awesome_music_rebased
+package com.teamdrt.varanasi
 
 import io.flutter.embedding.android.FlutterActivity
 

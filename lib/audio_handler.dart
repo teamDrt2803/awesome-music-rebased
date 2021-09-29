@@ -1,12 +1,30 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
 import 'package:awesome_music_rebased/utils/constants.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
 
 class AudioPlayerHandler extends BaseAudioHandler
     with QueueHandler, SeekHandler {
   AudioPlayer audioPlayer = Get.find<SongController>().audioPlayer;
+
+  @override
+  Future<void> prepare() {
+    audioPlayer.sequenceStateStream
+        .map((state) => state?.effectiveSequence)
+        .distinct()
+        .map(
+          (sequence) =>
+              sequence?.map((source) => source.tag as MediaItem).toList(),
+        )
+        .listen((event) {
+      if (event != null) {
+        queue.add(event);
+      }
+    });
+    return super.prepare();
+  }
 
   @override
   Future<void> play() async {
@@ -22,7 +40,6 @@ class AudioPlayerHandler extends BaseAudioHandler
 
   @override
   Future<void> skipToQueueItem(int index) async {
-    super.skipToQueueItem(index);
     audioPlayer.seek(Duration.zero, index: index);
     play();
   }
@@ -35,7 +52,6 @@ class AudioPlayerHandler extends BaseAudioHandler
 
   @override
   Future<void> seek(Duration position) async {
-    super.seek(position);
     audioPlayer.seek(position);
   }
 
@@ -44,12 +60,11 @@ class AudioPlayerHandler extends BaseAudioHandler
     String mediaId, [
     Map<String, dynamic>? extras,
   ]) async {
-    super.playFromMediaId(mediaId);
-    mediaItem.add(await getMediaItem(mediaId));
-    await audioPlayer.seek(
-      Duration.zero,
-      index: queue.value.indexWhere((q) => q.id == mediaId),
-    );
+    final index = queue.value.indexWhere((q) => q.id == mediaId);
+    if (index == 0) {
+      mediaItem.add(queue.value[index]);
+    }
+    await audioPlayer.seek(Duration.zero, index: index);
     play();
   }
 
@@ -63,8 +78,8 @@ class AudioPlayerHandler extends BaseAudioHandler
   @override
   Future<void> stop() async {
     super.stop();
-    mediaItem.add(null);
-    await audioPlayer.stop();
+    await audioPlayer.pause();
+    await audioPlayer.seek(Duration.zero);
   }
 
   @override
@@ -75,34 +90,130 @@ class AudioPlayerHandler extends BaseAudioHandler
 
   @override
   Future<void> addQueueItems(List<MediaItem> mediaItems) async {
-    super.addQueueItems(mediaItems);
-    audioPlayer.setAudioSource(
-      ConcatenatingAudioSource(
-        children: [...mediaItems.map((m) => AudioSource.uri(Uri.parse(m.id)))],
-      ),
-      preload: false,
-    );
+    if (audioPlayer.audioSource != null) {
+      await (audioPlayer.audioSource! as ConcatenatingAudioSource).addAll(
+        mediaItems.map((m) {
+          return AudioSource.uri(
+            ((m.extras?['download'] as bool?) ?? false)
+                ? Uri.file(m.id)
+                : Uri.parse(m.id),
+            tag: m,
+          );
+        }).toList(),
+      );
+    } else {
+      await audioPlayer.setAudioSource(
+        ConcatenatingAudioSource(
+          children: [
+            ...mediaItems.map((m) {
+              return AudioSource.uri(
+                ((m.extras?['download'] as bool?) ?? false)
+                    ? Uri.file(m.id)
+                    : Uri.parse(m.id),
+                tag: m,
+              );
+            })
+          ],
+        ),
+      );
+    }
   }
 
   @override
   Future<void> updateQueue(List<MediaItem> newQueue) async {
-    super.updateQueue(newQueue);
-    audioPlayer.setAudioSource(
+    await audioPlayer.setAudioSource(
       ConcatenatingAudioSource(
-        children: [...newQueue.map((m) => AudioSource.uri(Uri.parse(m.id)))],
+        children: [
+          ...newQueue.map((m) {
+            return AudioSource.uri(
+              ((m.extras?['download'] as bool?) ?? false)
+                  ? Uri.file(m.id)
+                  : Uri.parse(m.id),
+              tag: m,
+            );
+          })
+        ],
       ),
     );
   }
 
   @override
   Future<void> addQueueItem(MediaItem mediaItem) async {
-    final oldIndex = queue.value.indexWhere((q) => q.id == mediaItem.id);
-    final newQueue = queue.value;
-    if (oldIndex != -1) {
-      newQueue.removeAt(oldIndex);
+    debugPrint('Adding new item to queue');
+    final downloaded = (mediaItem.extras?['download'] as bool?) ?? false;
+    final index = queue.value.indexWhere(
+      (element) => downloaded
+          ? element.id == mediaItem.extras!['mediaUrl']
+          : element.id == mediaItem.id,
+    );
+    if (index != -1) {
+      debugPrint('Item already exists at index $index replacing...');
+      final currentIndex = audioPlayer.currentIndex;
+      await (audioPlayer.audioSource as ConcatenatingAudioSource?)
+          ?.removeAt(index);
+      await (audioPlayer.audioSource as ConcatenatingAudioSource?)?.insert(
+        index,
+        AudioSource.uri(
+          downloaded ? Uri.file(mediaItem.id) : Uri.parse(mediaItem.id),
+          tag: mediaItem,
+        ),
+      );
+      debugPrint(currentIndex.toString());
+      debugPrint(index.toString());
+      if (currentIndex == index &&
+          (audioPlayer.processingState == ProcessingState.ready ||
+              audioPlayer.processingState == ProcessingState.buffering)) {
+        debugPrint(index.toString());
+        await skipToQueueItem(index);
+        // await audioPlayer.seek(Duration.zero, index: index);
+      }
+    } else {
+      debugPrint("Item doesn't exists, adding...");
+      await (audioPlayer.audioSource as ConcatenatingAudioSource?)?.add(
+        AudioSource.uri(
+          downloaded ? Uri.file(mediaItem.id) : Uri.parse(mediaItem.id),
+          tag: mediaItem,
+        ),
+      );
     }
-    newQueue.add(mediaItem);
-    updateQueue(newQueue);
+  }
+
+  @override
+  Future<void> removeQueueItem(MediaItem mediaItem) async {
+    final downloaded = (mediaItem.extras?['download'] as bool?) ?? false;
+    final index = queue.value.indexWhere((m) => m.id == mediaItem.id);
+    if (downloaded) {
+      final currentIndex = audioPlayer.currentIndex;
+      final newMediaItem = mediaItem.copyWith(
+        id: mediaItem.extras!['mediaUrl'] as String,
+        extras: {
+          'hasLyrics': mediaItem.extras!['hasLyrics'],
+          'lyrics': mediaItem.extras!['lyrics'],
+        },
+      );
+      await removeQueueItemAt(index);
+      await (audioPlayer.audioSource as ConcatenatingAudioSource?)?.insert(
+        index,
+        AudioSource.uri(
+          Uri.parse(newMediaItem.id),
+          tag: newMediaItem,
+        ),
+      );
+      if (currentIndex == index &&
+          (audioPlayer.processingState == ProcessingState.ready ||
+              audioPlayer.processingState == ProcessingState.buffering)) {
+        debugPrint(index.toString());
+        await skipToQueueItem(index);
+      }
+    } else {
+      await removeQueueItemAt(index);
+    }
+  }
+
+  @override
+  Future<void> removeQueueItemAt(int index) async {
+    await (audioPlayer.audioSource as ConcatenatingAudioSource?)
+        ?.removeAt(index);
   }
 
   @override
@@ -125,7 +236,11 @@ class AudioPlayerHandler extends BaseAudioHandler
     switch (name) {
       case updateMediaItemCustomEvent:
         final index = extras!['index'] as int?;
-        mediaItem.add(index == null ? null : queue.value[index]);
+        try {
+          mediaItem.add(index == null ? null : queue.value[index]);
+        } catch (e) {
+          // debugPrintStack();
+        }
         break;
       default:
     }
