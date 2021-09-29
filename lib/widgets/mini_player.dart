@@ -1,7 +1,6 @@
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
 import 'package:awesome_music_rebased/utils/constants.dart';
 import 'package:awesome_music_rebased/utils/routes/routes.dart';
-import 'package:awesome_music_rebased/views/full_screen_player.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

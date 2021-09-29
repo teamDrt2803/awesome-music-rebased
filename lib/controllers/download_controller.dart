@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:audio_service/audio_service.dart';
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
 import 'package:awesome_music_rebased/utils/constants.dart';
+import 'package:awesome_music_rebased/utils/extensions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -14,7 +15,6 @@ import 'package:jiosaavn_wrapper/modals/search_result.dart';
 // ignore: depend_on_referenced_packages
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:awesome_music_rebased/utils/extensions.dart';
 
 class DownloadController extends GetxController {
   late Directory downloadPath;
