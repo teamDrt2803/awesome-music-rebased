@@ -9,7 +9,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await FlutterDownloader.initialize(debug: false);
+  await FlutterDownloader.initialize();
   await Firebase.initializeApp();
   await Hive.initFlutter();
   await Hive.openBox('downloads');

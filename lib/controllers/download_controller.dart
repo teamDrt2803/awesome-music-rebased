@@ -92,7 +92,6 @@ class DownloadController extends GetxController {
               ),
             ),
           );
-
           await delete(downloadCallback.id);
         } else {
           downloadBox.put(
@@ -171,14 +170,9 @@ class DownloadController extends GetxController {
       );
     }
     downloadProgress.bindStream(_port.asBroadcastStream());
-    // _port.listen((message) {
-    //   debugPrint(message[0].toString());
-    //   downloadProgress.value = message;
-    //   _handleDownloadProgressChanged(message);
-    // });
     debugPrint('Port registration result was $registered');
     await FlutterDownloader.loadTasks();
-    downloadPath = await getApplicationSupportDirectory();
+    downloadPath = await getApplicationDocumentsDirectory();
     for (final value in downloadBox.values) {
       final downloadedSong = DownloadedSong.fromMap(value);
       if (downloadedSong.downloadProgress == 0 ||

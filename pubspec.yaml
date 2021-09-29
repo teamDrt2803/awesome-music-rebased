@@ -18,7 +18,10 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_cache: ^0.1.0
-  flutter_downloader: ^1.7.0
+  flutter_downloader: 
+    git:
+      url: https://github.com/fluttercommunity/flutter_downloader.git
+      ref: 2b7b528585af4c5c0b61e818e425735182e50e1d
   get: ^4.3.8
   google_fonts: ^2.1.0
   hive: ^2.0.4
