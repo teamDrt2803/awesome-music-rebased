@@ -1,4 +1,5 @@
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
+import 'package:awesome_music_rebased/utils/constants.dart';
 import 'package:awesome_music_rebased/utils/routes/routes.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
@@ -16,7 +17,15 @@ class DiscoverScreen extends GetView<SongController> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AlbumWidget(controller.topSongs.value!),
+          Obx(
+            () => controller.topSongs.value == null
+                ? const CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation(colorBrandPrimary),
+                  )
+                : AlbumWidget(
+                    controller.topSongs.value!,
+                  ),
+          ),
         ],
       ),
     );
