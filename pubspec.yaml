@@ -26,8 +26,8 @@ dependencies:
   google_fonts: ^2.1.0
   hive: ^2.0.4
   hive_flutter: ^1.1.0
-  jiosaavn_wrapper: 
-    path: ../jiosaavn_wrapper
+  jiosaavn_wrapper: ^0.0.2+15
+    # path: ../jiosaavn_wrapper
   just_audio: ^0.9.11
   just_audio_background: ^0.0.1-beta.1
   lint: ^1.7.2

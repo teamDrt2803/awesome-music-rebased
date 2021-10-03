@@ -17,7 +17,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class DownloadController extends GetxController {
-  late Directory downloadPath;
+  Rxn<Directory> downloadPath = Rxn();
   final ReceivePort _port = ReceivePort();
   Rxn<dynamic> downloadProgress = Rxn();
   Box downloadBox = Hive.box('downloads');
@@ -148,16 +148,18 @@ class DownloadController extends GetxController {
   }
 
   String get getLocalPath =>
-      downloadPath.path + (Platform.isIOS ? Platform.pathSeparator : '');
+      (downloadPath.value?.path ?? '') +
+      (Platform.isIOS ? Platform.pathSeparator : '');
+
   @override
   Future<void> onInit() async {
-    downloadPath = await getApplicationDocumentsDirectory();
     super.onInit();
   }
 
   @override
   Future<void> onReady() async {
     super.onReady();
+    downloadPath.value = await getApplicationDocumentsDirectory();
     await FlutterDownloader.registerCallback(downloadCallback);
     await Permission.storage.request();
     ever(downloadProgress, _handleDownloadProgressChanged);
