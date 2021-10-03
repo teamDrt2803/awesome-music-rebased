@@ -1,4 +1,5 @@
 import 'package:audio_service/audio_service.dart';
+import 'package:awesome_music_rebased/controllers/download_controller.dart';
 import 'package:awesome_music_rebased/utils/constants.dart';
 import 'package:awesome_music_rebased/utils/extensions.dart';
 import 'package:awesome_music_rebased/utils/routes/routes.dart';
@@ -52,13 +53,18 @@ class SongController extends GetxController {
 
   ///Returns whether the player is playing any song
   bool get isPlaying => playingStream.value;
+
   bool isThisPlaylistPlaying(String playlistToken) {
     final playlist = playlists.value[playlistToken];
     if (playlist == null) return false;
     final songIdList = playlist.songs.map((e) => e.mediaURL).toList();
-    return songIdList
-            .any((element) => ((currentSong.value?.id) ?? '') == element) &&
-        isPlaying;
+    final loacalPath = Get.find<DownloadController>().getLocalPath;
+    final downloadedSongList = playlist.songs
+        .map((e) => loacalPath + e.mediaURL.split('/').last)
+        .toList();
+    return downloadedSongList
+            .any((e) => ((currentSong.value?.id) ?? '') == e) ||
+        songIdList.any((e) => ((currentSong.value?.id) ?? '') == e);
   }
 
   int get currentPlayingIndex => currentIndex.value ?? 0;
@@ -185,6 +191,10 @@ class SongController extends GetxController {
   }
 
   Future<void> fetchAlbumDetails(AlbumSearchResult album) async {
+    Get.toNamed(
+      Routes.albumScreen,
+      arguments: album.token,
+    );
     if (playlistFromList(album.token) == null) {
       try {
         playlists.value[album.token] =
@@ -204,10 +214,6 @@ class SongController extends GetxController {
         albumCachedNetworkImageProvider.value!,
       );
     }
-    Get.toNamed(
-      Routes.albumScreen,
-      arguments: playlists.value[album.token],
-    );
   }
 
   Playlist? playlistFromList(String token) =>

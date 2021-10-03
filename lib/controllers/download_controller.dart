@@ -6,10 +6,12 @@ import 'package:audio_service/audio_service.dart';
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
 import 'package:awesome_music_rebased/utils/constants.dart';
 import 'package:awesome_music_rebased/utils/extensions.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:jiosaavn_wrapper/modals/search_result.dart';
+import 'package:jiosaavn_wrapper/modals/song.dart';
 // ignore: depend_on_referenced_packages
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -57,6 +59,27 @@ class DownloadController extends GetxController {
     }
   }
 
+  Future<void> downloadPlaylist(String token) async {
+    debugPrint('downloading playlist..... for token $token');
+    final playlist = songController.playlists.value[token]!;
+    final songList = playlist.songs;
+    final downloadedList =
+        downloadBox.values.map((e) => DownloadedSong.fromMap(e));
+    for (final song in songList) {
+      if (!downloadedList.any((element) => element.mediaUrl == song.mediaURL)) {
+        await download(song.mediaItem);
+      }
+    }
+  }
+
+  bool isDownloaded(Song song) {
+    final downloadedList =
+        downloadBox.values.map((e) => DownloadedSong.fromMap(e));
+
+    return downloadedList
+        .any((downloaded) => downloaded.mediaUrl == song.mediaURL);
+  }
+
   Future<void> _handleDownloadProgressChanged(dynamic data) async {
     final downloadCallback = DownloadCallback.from(data as List);
     if (downloadBox.containsKey(downloadCallback.id)) {
@@ -93,6 +116,19 @@ class DownloadController extends GetxController {
               )
               .toMap(),
         );
+      }
+    }
+  }
+
+  Future<void> deletePlaylist(String token) async {
+    debugPrint('deleting playlist..... for token $token');
+    final playlist = songController.playlists.value[token]!;
+    final songList = playlist.songs;
+    final downloadedList =
+        downloadBox.values.map((e) => DownloadedSong.fromMap(e));
+    for (final song in downloadedList) {
+      if (songList.any((element) => element.mediaURL == song.mediaUrl)) {
+        await delete(song.taskId);
       }
     }
   }

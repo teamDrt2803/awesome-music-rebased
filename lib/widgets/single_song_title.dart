@@ -39,17 +39,6 @@ class SingleSongTile extends GetView<DownloadController> {
               EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 2),
           decoration: BoxDecoration(
             color: tileColor,
-            borderRadius:
-                isPlaying ? BorderRadius.circular(10) : BorderRadius.zero,
-            boxShadow: isPlaying
-                ? [
-                    BoxShadow(
-                      offset: const Offset(0, 3),
-                      blurRadius: 16.0,
-                      color: Colors.grey.shade200,
-                    ),
-                  ]
-                : [],
           ),
           child: ListTile(
             isThreeLine: true,
@@ -78,6 +67,9 @@ class SingleSongTile extends GetView<DownloadController> {
               song.title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: isPlaying ? colorBrandPrimary : null,
+              ),
             ),
             subtitle: Text(
               (song.displaySubtitle == null ||
