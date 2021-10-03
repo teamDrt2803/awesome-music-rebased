@@ -56,16 +56,6 @@ class SearchScreen extends GetView<SongController> {
                                 controller.topSearchResult.value!.albums[index],
                           ),
                         ),
-                      // if (controller.topSearchResult.value!.playlist.isNotEmpty)
-                      //   ..._buildItemsList(
-                      //     context,
-                      //     controller.topSearchResult.value!.albums.length,
-                      //     'Trending Albums',
-                      //     (index) => AlbumResultWidget(
-                      //       song:
-                      //           controller.topSearchResult.value!.albums[index],
-                      //     ),
-                      //   ),
                     ],
                   ),
                 ),

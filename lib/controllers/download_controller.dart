@@ -177,8 +177,35 @@ class DownloadController extends GetxController {
     downloadProgress.bindStream(_port.asBroadcastStream());
     for (final value
         in downloadBox.values.map((e) => DownloadedSong.fromMap(e))) {
+      debugPrint(value.status.toString());
       if (await File(value.fileLocation).exists()) {
-        await songController.audioHandler.addQueueItem(value.mediaItem);
+        if (value.status != DownloadTaskStatus.complete) {
+          if (value.status == DownloadTaskStatus.paused) {
+            FlutterDownloader.resume(taskId: value.taskId);
+          } else if (value.status == DownloadTaskStatus.failed) {
+            final newTaskId =
+                await FlutterDownloader.retry(taskId: value.taskId);
+            downloadBox.delete(value.taskId);
+            downloadBox.put(
+                newTaskId, value.copyWith(taskId: newTaskId).toMap());
+          } else if (value.status == DownloadTaskStatus.canceled) {
+            delete(value.taskId);
+          } else if (value.status == DownloadTaskStatus.enqueued) {
+            try {
+              final newTaskId =
+                  await FlutterDownloader.retry(taskId: value.taskId);
+              downloadBox.delete(value.taskId);
+              downloadBox.put(
+                newTaskId,
+                value.copyWith(taskId: newTaskId).toMap(),
+              );
+            } catch (e) {
+              delete(value.taskId);
+            }
+          }
+        } else {
+          await songController.audioHandler.addQueueItem(value.mediaItem);
+        }
       } else {
         delete(value.taskId);
       }

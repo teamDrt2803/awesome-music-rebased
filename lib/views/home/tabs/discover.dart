@@ -1,12 +1,11 @@
-import 'package:awesome_music_rebased/controllers/download_controller.dart';
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
-import 'package:awesome_music_rebased/utils/extensions.dart';
-import 'package:awesome_music_rebased/widgets/single_song_title.dart';
+import 'package:awesome_music_rebased/utils/routes/routes.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:get/get.dart';
 import 'package:get/get_state_manager/get_state_manager.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:jiosaavn_wrapper/modals/playlist.dart';
 
 class DiscoverScreen extends GetView<SongController> {
   const DiscoverScreen({Key? key}) : super(key: key);
@@ -14,37 +13,64 @@ class DiscoverScreen extends GetView<SongController> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: ValueListenableBuilder<Box<dynamic>>(
-        valueListenable:
-            Get.find<DownloadController>().downloadBox.listenable(),
-        builder: (_, box, __) {
-          return Obx(
-            () => ListView.builder(
-              itemCount: controller.topSongList.length,
-              itemBuilder: (context, index) {
-                final song = controller.topSongList[index];
-                final downloadedIndex = box.values
-                    .toList()
-                    .indexWhere((e) => e['mediaUrl'] == song.mediaItem.id);
-                final downloadedSong = downloadedIndex != -1
-                    ? DownloadedSong.fromMap(box.getAt(downloadedIndex))
-                    : null;
-                final progress = downloadedSong?.downloadProgress ?? 0;
-                final downloaded = downloadedIndex != -1 ||
-                    downloadedSong?.status == DownloadTaskStatus.enqueued;
-                return SingleSongTile(
-                  songController: controller,
-                  song: (downloaded && progress == 100)
-                      ? downloadedSong!.mediaItem
-                      : controller.topSongList[index].mediaItem,
-                  downloaded: downloaded,
-                  progress: progress,
-                  taskId: downloadedSong?.taskId,
-                );
-              },
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AlbumWidget(controller.topSongs.value!),
+        ],
+      ),
+    );
+  }
+}
+
+class AlbumWidget extends GetView<SongController> {
+  const AlbumWidget(this.playlist, {Key? key}) : super(key: key);
+  final Playlist playlist;
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () async {
+        controller.playlists.value[playlist.token] = playlist;
+        await controller.assignCachedNetworkImageFromAlbum(playlist.token);
+        Get.toNamed(Routes.albumScreen, arguments: playlist.token);
+      },
+      child: SizedBox.fromSize(
+        size: const Size.square(200),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Expanded(
+              child: Container(
+                width: 180,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  image: DecorationImage(
+                    image: CachedNetworkImageProvider(playlist.mediumResImage),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
             ),
-          );
-        },
+            const SizedBox(height: 8),
+            Text(
+              playlist.title,
+              textAlign: TextAlign.center,
+              style: Theme.of(context)
+                  .textTheme
+                  .subtitle1
+                  ?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              'Playlist',
+              style: Theme.of(context)
+                  .textTheme
+                  .subtitle1
+                  ?.copyWith(letterSpacing: 1, color: Colors.black54),
+            ),
+          ],
+        ),
       ),
     );
   }

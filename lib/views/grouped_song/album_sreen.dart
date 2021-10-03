@@ -230,8 +230,8 @@ class AlbumScreen
                                                     .albumPaletteGenerator
                                                     .value
                                                     ?.darkVibrantColor
-                                                    ?.bodyTextColor ??
-                                                controller.albumTopColor,
+                                                    ?.titleTextColor ??
+                                                controller.albumTextColor,
                                           )
                                         : Icon(
                                             Icons.play_arrow_outlined,
@@ -239,8 +239,8 @@ class AlbumScreen
                                                     .albumPaletteGenerator
                                                     .value
                                                     ?.darkVibrantColor
-                                                    ?.bodyTextColor ??
-                                                controller.albumTopColor,
+                                                    ?.titleTextColor ??
+                                                controller.albumTextColor,
                                           ),
                               ),
                             ),

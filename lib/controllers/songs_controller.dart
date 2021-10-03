@@ -199,21 +199,21 @@ class SongController extends GetxController {
       try {
         playlists.value[album.token] =
             await jioSaavnWrapper.fetchAlbumDetails(album.token);
-        albumCachedNetworkImageProvider.value =
-            CachedNetworkImageProvider(playlists.value[album.token]!.image);
-        albumPaletteGenerator.value = await PaletteGenerator.fromImageProvider(
-          albumCachedNetworkImageProvider.value!,
-        );
+        await assignCachedNetworkImageFromAlbum(album.token);
       } catch (_) {
-        Stack();
+        debugPrintStack();
       }
     } else {
-      albumCachedNetworkImageProvider.value =
-          CachedNetworkImageProvider(playlistFromList(album.token)!.image);
-      albumPaletteGenerator.value = await PaletteGenerator.fromImageProvider(
-        albumCachedNetworkImageProvider.value!,
-      );
+      await assignCachedNetworkImageFromAlbum(album.token);
     }
+  }
+
+  Future<void> assignCachedNetworkImageFromAlbum(String token) async {
+    albumCachedNetworkImageProvider.value =
+        CachedNetworkImageProvider(playlistFromList(token)!.image);
+    albumPaletteGenerator.value = await PaletteGenerator.fromImageProvider(
+      albumCachedNetworkImageProvider.value!,
+    );
   }
 
   Playlist? playlistFromList(String token) =>
