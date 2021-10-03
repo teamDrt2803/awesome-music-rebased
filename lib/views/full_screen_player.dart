@@ -1,13 +1,16 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
+import 'package:awesome_music_rebased/utils/constants.dart';
 import 'package:awesome_music_rebased/widgets/cust_app_bar.dart';
 import 'package:awesome_music_rebased/widgets/lyrics_widget.dart';
+import 'package:awesome_music_rebased/widgets/progress_indicator.dart';
 import 'package:awesome_music_rebased/widgets/seek_bar.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flip_card/flip_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_state_manager/get_state_manager.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:marquee/marquee.dart';
 
 class FullScreenPlayer extends GetWidget<SongController> {
@@ -217,11 +220,17 @@ class FullScreenPlayer extends GetWidget<SongController> {
                               controller.audioHandler.play();
                             }
                           },
-                          icon: Icon(
-                            controller.isPlaying
-                                ? Icons.pause_circle_filled_outlined
-                                : Icons.play_circle_fill_outlined,
-                          ),
+                          icon: (controller
+                                      .playBackStream.value.processingState ==
+                                  ProcessingState.buffering)
+                              ? CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation(textColor),
+                                )
+                              : Icon(
+                                  controller.isPlaying
+                                      ? Icons.pause_circle_filled_outlined
+                                      : Icons.play_circle_fill_outlined,
+                                ),
                           iconSize: 72,
                           color: textColor,
                           disabledColor: textColor?.withOpacity(0.35),

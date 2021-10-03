@@ -2,6 +2,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
 import 'package:awesome_music_rebased/utils/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -23,6 +24,7 @@ class AudioPlayerHandler extends BaseAudioHandler
         queue.add(event);
       }
     });
+    audioPlayer.playbackEventStream.map(_transformEvent).pipe(playbackState);
     return super.prepare();
   }
 
@@ -93,6 +95,7 @@ class AudioPlayerHandler extends BaseAudioHandler
     if (audioPlayer.audioSource != null) {
       await (audioPlayer.audioSource! as ConcatenatingAudioSource).addAll(
         mediaItems.map((m) {
+          debugPrint(m.id);
           return AudioSource.uri(
             ((m.extras?['download'] as bool?) ?? false)
                 ? Uri.file(m.id)
@@ -102,20 +105,24 @@ class AudioPlayerHandler extends BaseAudioHandler
         }).toList(),
       );
     } else {
-      await audioPlayer.setAudioSource(
-        ConcatenatingAudioSource(
-          children: [
-            ...mediaItems.map((m) {
-              return AudioSource.uri(
-                ((m.extras?['download'] as bool?) ?? false)
-                    ? Uri.file(m.id)
-                    : Uri.parse(m.id),
-                tag: m,
-              );
-            })
-          ],
-        ),
-      );
+      try {
+        await audioPlayer.setAudioSource(
+          ConcatenatingAudioSource(
+            children: [
+              ...mediaItems.map((m) {
+                return AudioSource.uri(
+                  ((m.extras?['download'] as bool?) ?? false)
+                      ? Uri.file(m.id)
+                      : Uri.parse(m.id),
+                  tag: m,
+                );
+              })
+            ],
+          ),
+        );
+      } on PlatformException catch (_) {
+        debugPrintStack();
+      }
     }
   }
 
@@ -139,7 +146,6 @@ class AudioPlayerHandler extends BaseAudioHandler
 
   @override
   Future<void> addQueueItem(MediaItem mediaItem) async {
-    debugPrint('Adding new item to queue');
     final downloaded = (mediaItem.extras?['download'] as bool?) ?? false;
     final index = queue.value.indexWhere(
       (element) => downloaded
@@ -147,8 +153,8 @@ class AudioPlayerHandler extends BaseAudioHandler
           : element.id == mediaItem.id,
     );
     if (index != -1) {
-      debugPrint('Item already exists at index $index replacing...');
       final currentIndex = audioPlayer.currentIndex;
+      final position = audioPlayer.position;
       await (audioPlayer.audioSource as ConcatenatingAudioSource?)
           ?.removeAt(index);
       await (audioPlayer.audioSource as ConcatenatingAudioSource?)?.insert(
@@ -158,23 +164,25 @@ class AudioPlayerHandler extends BaseAudioHandler
           tag: mediaItem,
         ),
       );
-      debugPrint(currentIndex.toString());
-      debugPrint(index.toString());
       if (currentIndex == index &&
           (audioPlayer.processingState == ProcessingState.ready ||
               audioPlayer.processingState == ProcessingState.buffering)) {
-        debugPrint(index.toString());
-        await skipToQueueItem(index);
-        // await audioPlayer.seek(Duration.zero, index: index);
+        await audioPlayer.seek(position, index: index);
+        if (audioPlayer.playing) {
+          play();
+        }
       }
     } else {
-      debugPrint("Item doesn't exists, adding...");
-      await (audioPlayer.audioSource as ConcatenatingAudioSource?)?.add(
-        AudioSource.uri(
-          downloaded ? Uri.file(mediaItem.id) : Uri.parse(mediaItem.id),
-          tag: mediaItem,
-        ),
-      );
+      if (audioPlayer.audioSource != null) {
+        await (audioPlayer.audioSource as ConcatenatingAudioSource?)?.add(
+          AudioSource.uri(
+            downloaded ? Uri.file(mediaItem.id) : Uri.parse(mediaItem.id),
+            tag: mediaItem,
+          ),
+        );
+      } else {
+        await addQueueItems([mediaItem]);
+      }
     }
   }
 
@@ -184,6 +192,7 @@ class AudioPlayerHandler extends BaseAudioHandler
     final index = queue.value.indexWhere((m) => m.id == mediaItem.id);
     if (downloaded) {
       final currentIndex = audioPlayer.currentIndex;
+      final position = audioPlayer.position;
       final newMediaItem = mediaItem.copyWith(
         id: mediaItem.extras!['mediaUrl'] as String,
         extras: {
@@ -193,7 +202,7 @@ class AudioPlayerHandler extends BaseAudioHandler
       );
       await removeQueueItemAt(index);
       await (audioPlayer.audioSource as ConcatenatingAudioSource?)?.insert(
-        index,
+        index == -1 ? 0 : index,
         AudioSource.uri(
           Uri.parse(newMediaItem.id),
           tag: newMediaItem,
@@ -202,8 +211,10 @@ class AudioPlayerHandler extends BaseAudioHandler
       if (currentIndex == index &&
           (audioPlayer.processingState == ProcessingState.ready ||
               audioPlayer.processingState == ProcessingState.buffering)) {
-        debugPrint(index.toString());
-        await skipToQueueItem(index);
+        await audioPlayer.seek(position, index: index);
+        if (audioPlayer.playing) {
+          play();
+        }
       }
     } else {
       await removeQueueItemAt(index);
@@ -212,8 +223,10 @@ class AudioPlayerHandler extends BaseAudioHandler
 
   @override
   Future<void> removeQueueItemAt(int index) async {
-    await (audioPlayer.audioSource as ConcatenatingAudioSource?)
-        ?.removeAt(index);
+    if (index != -1) {
+      await (audioPlayer.audioSource as ConcatenatingAudioSource?)
+          ?.removeAt(index);
+    }
   }
 
   @override
@@ -239,10 +252,41 @@ class AudioPlayerHandler extends BaseAudioHandler
         try {
           mediaItem.add(index == null ? null : queue.value[index]);
         } catch (e) {
-          // debugPrintStack();
+          // Stack();
         }
         break;
       default:
     }
+  }
+
+  PlaybackState _transformEvent(PlaybackEvent event) {
+    return PlaybackState(
+      controls: [
+        MediaControl.skipToPrevious,
+        if (audioPlayer.playing) MediaControl.pause else MediaControl.play,
+        MediaControl.stop,
+        MediaControl.skipToNext,
+      ],
+      systemActions: const {
+        MediaAction.seek,
+        MediaAction.seekForward,
+        MediaAction.seekBackward,
+        MediaAction.skipToNext,
+        MediaAction.skipToPrevious,
+      },
+      androidCompactActionIndices: const [0, 1, 3],
+      processingState: const {
+        ProcessingState.idle: AudioProcessingState.idle,
+        ProcessingState.loading: AudioProcessingState.loading,
+        ProcessingState.buffering: AudioProcessingState.buffering,
+        ProcessingState.ready: AudioProcessingState.ready,
+        ProcessingState.completed: AudioProcessingState.completed,
+      }[audioPlayer.processingState]!,
+      playing: audioPlayer.playing,
+      updatePosition: audioPlayer.position,
+      bufferedPosition: audioPlayer.bufferedPosition,
+      speed: audioPlayer.speed,
+      queueIndex: event.currentIndex,
+    );
   }
 }

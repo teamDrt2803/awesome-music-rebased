@@ -14,7 +14,6 @@ class MiniPlayer extends GetView<SongController> {
     return Obx(
       () {
         final song = controller.currentSong.value;
-        debugPrint(song?.id);
         return song == null
             ? const SizedBox.shrink()
             : InkWell(

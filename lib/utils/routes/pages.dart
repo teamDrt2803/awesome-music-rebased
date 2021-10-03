@@ -1,5 +1,6 @@
 import 'package:awesome_music_rebased/utils/routes/routes.dart';
 import 'package:awesome_music_rebased/views/full_screen_player.dart';
+import 'package:awesome_music_rebased/views/grouped_song/album_sreen.dart';
 import 'package:awesome_music_rebased/views/home/home.dart';
 import 'package:get/route_manager.dart';
 
@@ -14,5 +15,9 @@ List<GetPage> get pages => [
         page: () => const FullScreenPlayer(),
         fullscreenDialog: true,
         preventDuplicates: true,
+      ),
+      GetPage(
+        name: Routes.albumScreen,
+        page: () => AlbumScreen(),
       ),
     ];

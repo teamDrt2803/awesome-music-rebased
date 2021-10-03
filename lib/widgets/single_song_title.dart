@@ -17,6 +17,8 @@ class SingleSongTile extends GetView<DownloadController> {
     this.downloaded = false,
     this.progress = 100,
     this.taskId,
+    this.horizontalPadding = 12,
+    this.tileColor = Colors.white,
   }) : super(key: key);
 
   final SongController songController;
@@ -24,6 +26,8 @@ class SingleSongTile extends GetView<DownloadController> {
   final bool downloaded;
   final int progress;
   final String? taskId;
+  final double horizontalPadding;
+  final Color tileColor;
   @override
   Widget build(BuildContext context) {
     return Obx(
@@ -31,9 +35,10 @@ class SingleSongTile extends GetView<DownloadController> {
         final isPlaying = songController.currentSong.value?.id == song.id;
         return AnimatedContainer(
           duration: const Duration(milliseconds: 300),
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          margin:
+              EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 2),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: tileColor,
             borderRadius:
                 isPlaying ? BorderRadius.circular(10) : BorderRadius.zero,
             boxShadow: isPlaying
@@ -48,8 +53,14 @@ class SingleSongTile extends GetView<DownloadController> {
           ),
           child: ListTile(
             isThreeLine: true,
-            onTap: () {
-              songController.playSong(song.id);
+            onTap: () async {
+              if (!songController.queueStream
+                  .any((element) => element.id == song.id)) {
+                await songController.audioHandler.addQueueItem(song);
+                songController.playSong(song.id);
+              } else {
+                songController.playSong(song.id);
+              }
             },
             minLeadingWidth: 48,
             leading: SizedBox(
