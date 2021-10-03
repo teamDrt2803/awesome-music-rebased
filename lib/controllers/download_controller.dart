@@ -148,8 +148,7 @@ class DownloadController extends GetxController {
   }
 
   String get getLocalPath =>
-      (downloadPath.value?.path ?? '') +
-      (Platform.isIOS ? Platform.pathSeparator : '');
+      (downloadPath.value?.path ?? '') + Platform.pathSeparator;
 
   @override
   Future<void> onInit() async {
