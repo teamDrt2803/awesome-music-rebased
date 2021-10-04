@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_state_manager/get_state_manager.dart';
+import 'package:just_audio/just_audio.dart';
 
 class MiniPlayer extends GetView<SongController> {
   const MiniPlayer({Key? key}) : super(key: key);
@@ -14,7 +15,6 @@ class MiniPlayer extends GetView<SongController> {
     return Obx(
       () {
         final song = controller.currentSong.value;
-        debugPrint(song?.id);
         return song == null
             ? const SizedBox.shrink()
             : InkWell(
@@ -84,11 +84,19 @@ class MiniPlayer extends GetView<SongController> {
                                 controller.audioHandler.play();
                               }
                             },
-                            icon: Icon(
-                              controller.isPlaying
-                                  ? Icons.pause_outlined
-                                  : Icons.play_arrow_outlined,
-                            ),
+                            icon: (controller
+                                        .playBackStream.value.processingState ==
+                                    ProcessingState.buffering)
+                                ? CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation(
+                                      Theme.of(context).iconTheme.color,
+                                    ),
+                                  )
+                                : Icon(
+                                    controller.isPlaying
+                                        ? Icons.pause_outlined
+                                        : Icons.play_arrow_outlined,
+                                  ),
                             iconSize: 36,
                           ),
                           Expanded(

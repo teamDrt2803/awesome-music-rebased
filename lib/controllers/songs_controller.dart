@@ -1,12 +1,14 @@
 import 'package:audio_service/audio_service.dart';
+import 'package:awesome_music_rebased/controllers/download_controller.dart';
 import 'package:awesome_music_rebased/utils/constants.dart';
 import 'package:awesome_music_rebased/utils/extensions.dart';
+import 'package:awesome_music_rebased/utils/routes/routes.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_state_manager/get_state_manager.dart';
 import 'package:jiosaavn_wrapper/jiosaavn_wrapper.dart';
+import 'package:jiosaavn_wrapper/modals/artist.dart';
 import 'package:jiosaavn_wrapper/modals/playlist.dart';
 import 'package:jiosaavn_wrapper/modals/search_result.dart';
 import 'package:jiosaavn_wrapper/modals/song.dart';
@@ -16,28 +18,61 @@ import 'package:palette_generator/palette_generator.dart';
 import '../audio_handler.dart';
 
 class SongController extends GetxController {
+  ///JioSaavn Wrapper
   JioSaavnWrapper jioSaavnWrapper = JioSaavnWrapper.instance;
+
+  ///Rx variables
   Rxn<Playlist> topSongs = Rxn<Playlist>();
   Rxn<MediaItem> currentSong = Rxn();
   RxList<MediaItem> queueStream = RxList();
-  RxnInt currentIndex = RxnInt();
-  RxBool playingStream = RxBool(false);
   Rx<ProcessingState> processingStateStream = Rx(ProcessingState.idle);
   Rx<PlaybackEvent> playBackStream = Rx(PlaybackEvent());
   Rx<Duration> positionStream = Rx(Duration.zero);
-  late AudioHandler audioHandler;
-  AudioPlayer audioPlayer = AudioPlayer();
-  late PageController fullScreenThumbController;
+  RxnInt currentIndex = RxnInt();
+  RxBool playingStream = RxBool(false);
   Rxn<PaletteGenerator> paletteGenerator = Rxn();
+  Rxn<PaletteGenerator> albumPaletteGenerator = Rxn();
   Rxn<CachedNetworkImageProvider> cachedNetworkImageProvider = Rxn();
+  Rxn<CachedNetworkImageProvider> albumCachedNetworkImageProvider = Rxn();
   Rx<Map<String, bool>> showLyrics = Rx({});
   Rxn<SearchResult> searcResult = Rxn();
   Rxn<TopSearchResult> topSearchResult = Rxn();
+  Rx<Map<String, Playlist>> playlists = Rx({});
+  Rx<Map<String, ArtistDetails>> artistDetails = Rx({});
+  RxBool fetchingAlbumDetails = RxBool(false);
 
+  ///AudioHandler Variables
+  late AudioHandler audioHandler;
+  AudioPlayer audioPlayer = AudioPlayer();
+
+  ///PageController for thumbnail image on full screen audio player
+  late PageController fullScreenThumbController;
+
+  ///Getter for accessign list of topSongs
   List<Song> get topSongList => topSongs.value?.songs ?? [];
+
+  ///Current Processing State of AudioService
   ProcessingState get currentProcessingState => processingStateStream.value;
+
+  ///Returns whether the player is playing any song
   bool get isPlaying => playingStream.value;
+
+  bool isThisPlaylistPlaying(String playlistToken) {
+    final playlist = playlists.value[playlistToken];
+    if (playlist == null) return false;
+    final songIdList = playlist.songs.map((e) => e.mediaURL).toList();
+    final loacalPath = Get.find<DownloadController>().getLocalPath;
+    final downloadedSongList = playlist.songs
+        .map((e) => loacalPath + e.mediaURL.split('/').last)
+        .toList();
+    return downloadedSongList
+            .any((e) => ((currentSong.value?.id) ?? '') == e) ||
+        songIdList.any((e) => ((currentSong.value?.id) ?? '') == e);
+  }
+
   int get currentPlayingIndex => currentIndex.value ?? 0;
+
+  ///List of Graient colors for FullScreen player
   Color? get topColor => paletteGenerator.value?.mutedColor?.color;
   Color? get bottomColor =>
       paletteGenerator.value?.darkMutedColor?.color ?? topColor;
@@ -45,6 +80,16 @@ class SongController extends GetxController {
       paletteGenerator.value?.darkMutedColor?.bodyTextColor.withOpacity(1) ??
       paletteGenerator.value?.mutedColor?.bodyTextColor.withOpacity(1);
 
+  ///List of Graient colors for Album Details Screen
+  Color? get albumTopColor => albumPaletteGenerator.value?.mutedColor?.color;
+  Color? get albumBottomColor =>
+      albumPaletteGenerator.value?.darkMutedColor?.color ?? topColor;
+  Color? get albumTextColor =>
+      albumPaletteGenerator.value?.darkMutedColor?.bodyTextColor
+          .withOpacity(1) ??
+      albumPaletteGenerator.value?.mutedColor?.bodyTextColor.withOpacity(1);
+
+  ///Toggle Show Lyrics
   void toggleShowLyrics(String id) {
     showLyrics.value[id] = !(showLyrics.value[id] ?? false);
   }
@@ -52,10 +97,7 @@ class SongController extends GetxController {
   ///Fetch Top Songs and add them to AudioHandler
   Future<void> getTopSongs() async {
     topSongs.value = await jioSaavnWrapper.fetchTopSongs();
-    final mediaItems = <MediaItem>[];
-    for (final item in topSongs.value!.songs) {
-      mediaItems.add(item.mediaItem);
-    }
+    final mediaItems = topSongs.value!.songs.map((e) => e.mediaItem).toList();
     if (mediaItems.isNotEmpty) {
       await audioHandler.addQueueItems(mediaItems);
     }
@@ -85,19 +127,16 @@ class SongController extends GetxController {
   Future<void> playSongFromModal(dynamic song) async {
     if (song is SongSearchResult) {
       try {
-        debugPrint('Fetching song details for song ${song.title}');
         final songResult =
             await jioSaavnWrapper.fetchSongDetails(songId: song.id);
-        debugPrint('Fetched song details for song ${songResult.title}');
         await audioHandler.addQueueItem(songResult.mediaItem);
         await audioHandler.skipToQueueItem(
           queueStream
               .indexWhere((element) => element.id == songResult.mediaItem.id),
         );
       } catch (e) {
-        debugPrintStack();
+        Stack();
       }
-      debugPrint(song.id);
     }
   }
 
@@ -130,24 +169,16 @@ class SongController extends GetxController {
 
   Future<void> handleCurrentSongIndexUpdate(int? index) async {
     audioHandler.customAction(updateMediaItemCustomEvent, {'index': index});
-    debugPrint('Current Index is $index');
     if (index != null && fullScreenThumbController.hasClients) {
       await fullScreenThumbController.animateToPage(
         index,
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeIn,
       );
-      debugPrint(
-        'Changing Thumbnail Image to $index',
-      );
-    } else {
-      debugPrint('No Clients attached');
     }
   }
 
-  void _handleQueueStream(List<MediaItem> mediaItem) {
-    debugPrint('MediaList Updated');
-  }
+  void _handleQueueStream(List<MediaItem> mediaItem) {}
 
   Future<void> preparePageController(int index) async {
     fullScreenThumbController = PageController(initialPage: index);
@@ -162,6 +193,99 @@ class SongController extends GetxController {
     topSearchResult.value = await jioSaavnWrapper.fetchTrendingSearchResult();
   }
 
+  Future<void> fetchAlbumDetails(dynamic album) async {
+    fetchingAlbumDetails.value = true;
+    Get.toNamed(
+      Routes.albumScreen,
+      arguments: album.token,
+    );
+    if (album is AlbumSearchResult) {
+      if (playlistFromList(album.token) == null) {
+        try {
+          final oldPlaylist = playlists.value;
+          oldPlaylist[album.token] =
+              await jioSaavnWrapper.fetchAlbumDetails(album.token);
+          playlists.value = oldPlaylist;
+          await assignCachedNetworkImageFromAlbum(album.token, isAlbum: true);
+          fetchingAlbumDetails.value = false;
+        } catch (_) {
+          fetchingAlbumDetails.value = false;
+          debugPrintStack();
+        }
+      } else {
+        await assignCachedNetworkImageFromAlbum(album.token, isAlbum: true);
+        fetchingAlbumDetails.value = false;
+      }
+    } else if (album is Playlist) {
+      if (playlistFromList(album.token) == null) {
+        try {
+          final oldPlaylist = playlists.value;
+          oldPlaylist[album.token] =
+              await jioSaavnWrapper.fetchAlbumDetails(album.token);
+          playlists.value = oldPlaylist;
+          await assignCachedNetworkImageFromAlbum(album.token, isAlbum: true);
+          fetchingAlbumDetails.value = false;
+        } catch (_) {
+          fetchingAlbumDetails.value = false;
+          debugPrintStack();
+        }
+      } else {
+        await assignCachedNetworkImageFromAlbum(album.token, isAlbum: true);
+        fetchingAlbumDetails.value = false;
+      }
+    }
+  }
+
+  Future<void> fetchArtistDetails(ArtistSearchResult artist) async {
+    Get.toNamed(
+      Routes.artistDetailsScreen,
+      arguments: artist.token,
+    );
+    if (artistDetailsFromList(artist.token) == null) {
+      try {
+        artistDetails.value[artist.token] =
+            await jioSaavnWrapper.fetchArtistDetails(artist.token);
+        await assignCachedNetworkImageFromAlbum(artist.token);
+      } catch (_, stackTrace) {
+        debugPrint(_.toString());
+        debugPrintStack(stackTrace: stackTrace);
+      }
+    } else {
+      await assignCachedNetworkImageFromAlbum(artist.token);
+    }
+  }
+
+  Future<void> assignCachedNetworkImageFromAlbum(
+    String token, {
+    bool isAlbum = false,
+  }) async {
+    albumCachedNetworkImageProvider.value = CachedNetworkImageProvider(isAlbum
+        ? playlistFromList(token)!.image
+        : artistDetailsFromList(token)!.image);
+    albumPaletteGenerator.value = await PaletteGenerator.fromImageProvider(
+      albumCachedNetworkImageProvider.value!,
+    );
+  }
+
+  Future<void> addItemsToQueue(dynamic data) async {
+    if (data is ArtistDetails) {
+      debugPrint('Adding TopSong from ArtistDetails Modal');
+      final details = data;
+      await audioHandler
+          .addQueueItems(details.topSongs.map((e) => e.mediaItem).toList());
+      ScaffoldMessenger.of(Get.overlayContext!).showSnackBar(
+        const SnackBar(content: Text('Added Songs to queue')),
+      );
+    }
+  }
+
+  Playlist? playlistFromList(String token) =>
+      playlists.value.containsKey(token) ? playlists.value[token] : null;
+
+  ArtistDetails? artistDetailsFromList(String token) =>
+      artistDetails.value.containsKey(token)
+          ? artistDetails.value[token]
+          : null;
   @override
   Future<void> onReady() async {
     super.onReady();
