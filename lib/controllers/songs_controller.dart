@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_state_manager/get_state_manager.dart';
 import 'package:jiosaavn_wrapper/jiosaavn_wrapper.dart';
+import 'package:jiosaavn_wrapper/modals/artist.dart';
 import 'package:jiosaavn_wrapper/modals/playlist.dart';
 import 'package:jiosaavn_wrapper/modals/search_result.dart';
 import 'package:jiosaavn_wrapper/modals/song.dart';
@@ -37,6 +38,8 @@ class SongController extends GetxController {
   Rxn<SearchResult> searcResult = Rxn();
   Rxn<TopSearchResult> topSearchResult = Rxn();
   Rx<Map<String, Playlist>> playlists = Rx({});
+  Rx<Map<String, ArtistDetails>> artistDetails = Rx({});
+  RxBool fetchingAlbumDetails = RxBool(false);
 
   ///AudioHandler Variables
   late AudioHandler audioHandler;
@@ -190,35 +193,99 @@ class SongController extends GetxController {
     topSearchResult.value = await jioSaavnWrapper.fetchTrendingSearchResult();
   }
 
-  Future<void> fetchAlbumDetails(AlbumSearchResult album) async {
+  Future<void> fetchAlbumDetails(dynamic album) async {
+    fetchingAlbumDetails.value = true;
     Get.toNamed(
       Routes.albumScreen,
       arguments: album.token,
     );
-    if (playlistFromList(album.token) == null) {
-      try {
-        playlists.value[album.token] =
-            await jioSaavnWrapper.fetchAlbumDetails(album.token);
-        await assignCachedNetworkImageFromAlbum(album.token);
-      } catch (_) {
-        debugPrintStack();
+    if (album is AlbumSearchResult) {
+      if (playlistFromList(album.token) == null) {
+        try {
+          final oldPlaylist = playlists.value;
+          oldPlaylist[album.token] =
+              await jioSaavnWrapper.fetchAlbumDetails(album.token);
+          playlists.value = oldPlaylist;
+          await assignCachedNetworkImageFromAlbum(album.token, isAlbum: true);
+          fetchingAlbumDetails.value = false;
+        } catch (_) {
+          fetchingAlbumDetails.value = false;
+          debugPrintStack();
+        }
+      } else {
+        await assignCachedNetworkImageFromAlbum(album.token, isAlbum: true);
+        fetchingAlbumDetails.value = false;
       }
-    } else {
-      await assignCachedNetworkImageFromAlbum(album.token);
+    } else if (album is Playlist) {
+      if (playlistFromList(album.token) == null) {
+        try {
+          final oldPlaylist = playlists.value;
+          oldPlaylist[album.token] =
+              await jioSaavnWrapper.fetchAlbumDetails(album.token);
+          playlists.value = oldPlaylist;
+          await assignCachedNetworkImageFromAlbum(album.token, isAlbum: true);
+          fetchingAlbumDetails.value = false;
+        } catch (_) {
+          fetchingAlbumDetails.value = false;
+          debugPrintStack();
+        }
+      } else {
+        await assignCachedNetworkImageFromAlbum(album.token, isAlbum: true);
+        fetchingAlbumDetails.value = false;
+      }
     }
   }
 
-  Future<void> assignCachedNetworkImageFromAlbum(String token) async {
-    albumCachedNetworkImageProvider.value =
-        CachedNetworkImageProvider(playlistFromList(token)!.image);
+  Future<void> fetchArtistDetails(ArtistSearchResult artist) async {
+    Get.toNamed(
+      Routes.artistDetailsScreen,
+      arguments: artist.token,
+    );
+    if (artistDetailsFromList(artist.token) == null) {
+      try {
+        artistDetails.value[artist.token] =
+            await jioSaavnWrapper.fetchArtistDetails(artist.token);
+        await assignCachedNetworkImageFromAlbum(artist.token);
+      } catch (_, stackTrace) {
+        debugPrint(_.toString());
+        debugPrintStack(stackTrace: stackTrace);
+      }
+    } else {
+      await assignCachedNetworkImageFromAlbum(artist.token);
+    }
+  }
+
+  Future<void> assignCachedNetworkImageFromAlbum(
+    String token, {
+    bool isAlbum = false,
+  }) async {
+    albumCachedNetworkImageProvider.value = CachedNetworkImageProvider(isAlbum
+        ? playlistFromList(token)!.image
+        : artistDetailsFromList(token)!.image);
     albumPaletteGenerator.value = await PaletteGenerator.fromImageProvider(
       albumCachedNetworkImageProvider.value!,
     );
   }
 
+  Future<void> addItemsToQueue(dynamic data) async {
+    if (data is ArtistDetails) {
+      debugPrint('Adding TopSong from ArtistDetails Modal');
+      final details = data;
+      await audioHandler
+          .addQueueItems(details.topSongs.map((e) => e.mediaItem).toList());
+      ScaffoldMessenger.of(Get.overlayContext!).showSnackBar(
+        const SnackBar(content: Text('Added Songs to queue')),
+      );
+    }
+  }
+
   Playlist? playlistFromList(String token) =>
       playlists.value.containsKey(token) ? playlists.value[token] : null;
 
+  ArtistDetails? artistDetailsFromList(String token) =>
+      artistDetails.value.containsKey(token)
+          ? artistDetails.value[token]
+          : null;
   @override
   Future<void> onReady() async {
     super.onReady();

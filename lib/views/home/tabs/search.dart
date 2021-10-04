@@ -35,16 +35,16 @@ class SearchScreen extends GetView<SongController> {
                                 .topSearchResult.value!.artists[index],
                           ),
                         ),
-                      if (controller.topSearchResult.value!.songs.isNotEmpty)
-                        ..._buildItemsList(
-                          context,
-                          controller.topSearchResult.value!.songs.length,
-                          'Trending Songs',
-                          (index) => SongResultWidget(
-                            song:
-                                controller.topSearchResult.value!.songs[index],
-                          ),
-                        ),
+                      // if (controller.topSearchResult.value!.songs.isNotEmpty)
+                      //   ..._buildItemsList(
+                      //     context,
+                      //     controller.topSearchResult.value!.songs.length,
+                      //     'Trending Songs',
+                      //     (index) => SongResultWidget(
+                      //       song:
+                      //           controller.topSearchResult.value!.songs[index],
+                      //     ),
+                      //   ),
                       const SizedBox(height: 36),
                       if (controller.topSearchResult.value!.albums.isNotEmpty)
                         ..._buildItemsList(

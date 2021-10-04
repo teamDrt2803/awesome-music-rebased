@@ -33,15 +33,24 @@ class DiscoverScreen extends GetView<SongController> {
 }
 
 class AlbumWidget extends GetView<SongController> {
-  const AlbumWidget(this.playlist, {Key? key}) : super(key: key);
+  const AlbumWidget(this.playlist, {Key? key, this.prefetched = true})
+      : super(key: key);
   final Playlist playlist;
+  final bool prefetched;
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
-        controller.playlists.value[playlist.token] = playlist;
-        await controller.assignCachedNetworkImageFromAlbum(playlist.token);
-        Get.toNamed(Routes.albumScreen, arguments: playlist.token);
+        if (prefetched) {
+          controller.playlists.value[playlist.token] = playlist;
+          await controller.assignCachedNetworkImageFromAlbum(
+            playlist.token,
+            isAlbum: true,
+          );
+          Get.toNamed(Routes.albumScreen, arguments: playlist.token);
+        } else {
+          controller.fetchAlbumDetails(playlist);
+        }
       },
       child: SizedBox.fromSize(
         size: const Size.square(200),

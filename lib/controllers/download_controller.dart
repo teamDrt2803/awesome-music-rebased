@@ -72,6 +72,19 @@ class DownloadController extends GetxController {
     }
   }
 
+  Future<void> downloadArtistTopSongs(String token) async {
+    debugPrint('downloading topSongs..... for token $token');
+    final playlist = songController.artistDetails.value[token]!;
+    final songList = playlist.topSongs;
+    final downloadedList =
+        downloadBox.values.map((e) => DownloadedSong.fromMap(e));
+    for (final song in songList) {
+      if (!downloadedList.any((element) => element.mediaUrl == song.mediaURL)) {
+        await download(song.mediaItem);
+      }
+    }
+  }
+
   bool isDownloaded(Song song) {
     final downloadedList =
         downloadBox.values.map((e) => DownloadedSong.fromMap(e));
@@ -124,6 +137,19 @@ class DownloadController extends GetxController {
     debugPrint('deleting playlist..... for token $token');
     final playlist = songController.playlists.value[token]!;
     final songList = playlist.songs;
+    final downloadedList =
+        downloadBox.values.map((e) => DownloadedSong.fromMap(e));
+    for (final song in downloadedList) {
+      if (songList.any((element) => element.mediaURL == song.mediaUrl)) {
+        await delete(song.taskId);
+      }
+    }
+  }
+
+  Future<void> deleteArtistTopSongs(String token) async {
+    debugPrint('deleting playlist..... for token $token');
+    final playlist = songController.artistDetails.value[token]!;
+    final songList = playlist.topSongs;
     final downloadedList =
         downloadBox.values.map((e) => DownloadedSong.fromMap(e));
     for (final song in downloadedList) {

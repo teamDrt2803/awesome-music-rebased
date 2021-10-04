@@ -17,9 +17,7 @@ class DownloadsScreen extends GetView<DownloadController> {
         return ListView.builder(
           itemCount: box.length,
           itemBuilder: (context, index) {
-            final variable = DownloadedSong.fromMap(
-              box.getAt(index),
-            );
+            final variable = DownloadedSong.fromMap(box.getAt(index));
             return SingleSongTile(
               songController: Get.find<SongController>(),
               song: variable.mediaItem,

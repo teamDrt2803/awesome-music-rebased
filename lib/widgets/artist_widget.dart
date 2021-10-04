@@ -15,6 +15,9 @@ class ArtistWidget extends GetView<SongController> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      onTap: () {
+        controller.fetchArtistDetails(artist);
+      },
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
