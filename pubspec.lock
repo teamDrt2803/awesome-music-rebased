@@ -258,6 +258,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "3.1.2"
+  flutter_des_plugin:
+    dependency: transitive
+    description:
+      name: flutter_des_plugin
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.0.1+6"
   flutter_downloader:
     dependency: "direct main"
     description:
@@ -329,10 +336,12 @@ packages:
   jiosaavn_wrapper:
     dependency: "direct main"
     description:
-      path: "../jiosaavn_wrapper"
-      relative: true
-    source: path
-    version: "0.0.2+15"
+      path: "."
+      ref: HEAD
+      resolved-ref: "34b032a6b960d221faa6fe12a1a6661da25be2fa"
+      url: "https://github.com/teamDrt280320/jiosaavn_wrapper"
+    source: git
+    version: "0.0.1+2"
   js:
     dependency: transitive
     description:

@@ -27,7 +27,8 @@ dependencies:
   hive: ^2.0.4
   hive_flutter: ^1.1.0
   jiosaavn_wrapper:
-    path: ../jiosaavn_wrapper
+    git: https://github.com/teamDrt280320/jiosaavn_wrapper
+    # path: ../jiosaavn_wrapper
   just_audio: ^0.9.11
   just_audio_background: ^0.0.1-beta.1
   lint: ^1.7.2
