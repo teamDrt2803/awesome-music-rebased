@@ -67,7 +67,8 @@ class AlbumScreen
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
-                                              color: controller.albumTextColor),
+                                            color: controller.albumTextColor,
+                                          ),
                                         ),
                                         stretchModes: const <StretchMode>[
                                           StretchMode.zoomBackground,
@@ -121,7 +122,8 @@ class AlbumScreen
                                                     onPressed: () {
                                                       controller2
                                                           .downloadPlaylist(
-                                                              token);
+                                                        token,
+                                                      );
                                                     },
                                                     icon: const Icon(
                                                       Icons.download_outlined,
@@ -131,7 +133,8 @@ class AlbumScreen
                                                     onPressed: () {
                                                       controller2
                                                           .deletePlaylist(
-                                                              token);
+                                                        token,
+                                                      );
                                                     },
                                                     icon: const Icon(
                                                       Icons

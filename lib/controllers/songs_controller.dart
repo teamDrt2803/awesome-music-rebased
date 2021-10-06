@@ -259,9 +259,11 @@ class SongController extends GetxController {
     String token, {
     bool isAlbum = false,
   }) async {
-    albumCachedNetworkImageProvider.value = CachedNetworkImageProvider(isAlbum
-        ? playlistFromList(token)!.image
-        : artistDetailsFromList(token)!.image);
+    albumCachedNetworkImageProvider.value = CachedNetworkImageProvider(
+      isAlbum
+          ? playlistFromList(token)!.image
+          : artistDetailsFromList(token)!.image,
+    );
     albumPaletteGenerator.value = await PaletteGenerator.fromImageProvider(
       albumCachedNetworkImageProvider.value!,
     );

@@ -2,7 +2,6 @@ import 'package:awesome_music_rebased/controllers/songs_controller.dart';
 import 'package:awesome_music_rebased/utils/constants.dart';
 import 'package:awesome_music_rebased/widgets/album_search_result_widget.dart';
 import 'package:awesome_music_rebased/widgets/artist_widget.dart';
-import 'package:awesome_music_rebased/widgets/song_result_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';

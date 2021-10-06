@@ -1,9 +1,7 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
-import 'package:awesome_music_rebased/utils/constants.dart';
 import 'package:awesome_music_rebased/widgets/cust_app_bar.dart';
 import 'package:awesome_music_rebased/widgets/lyrics_widget.dart';
-import 'package:awesome_music_rebased/widgets/progress_indicator.dart';
 import 'package:awesome_music_rebased/widgets/seek_bar.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flip_card/flip_card.dart';

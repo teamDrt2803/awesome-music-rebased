@@ -212,7 +212,9 @@ class DownloadController extends GetxController {
                 await FlutterDownloader.retry(taskId: value.taskId);
             downloadBox.delete(value.taskId);
             downloadBox.put(
-                newTaskId, value.copyWith(taskId: newTaskId).toMap());
+              newTaskId,
+              value.copyWith(taskId: newTaskId).toMap(),
+            );
           } else if (value.status == DownloadTaskStatus.canceled) {
             delete(value.taskId);
           } else if (value.status == DownloadTaskStatus.enqueued) {
