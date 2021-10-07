@@ -17,10 +17,7 @@ class AppController extends GetxController {
     }
     _currentIndex.value = index;
     pageController.jumpToPage(index);
-    if (index == 1 &&
-        Get.find<SongController>().topSearchResult.value == null) {
-      Get.find<SongController>().fetchTrendingSearches();
-    }
+    // Get.find<SongController>().fetchTrendingSearches();
     fab.value = buildFab(reset: true);
   }
 

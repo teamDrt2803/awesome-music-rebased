@@ -33,81 +33,105 @@ class ArtistDetailsScreen
           return Scaffold(
             bottomSheet: controller.showMiniPlayer ? const MiniPlayer() : null,
             bottomNavigationBar: const NavigationBar(),
-            body: album == null
-                ? const Center(child: CircularProgressIndicator())
-                : ValueListenableBuilder<Box<dynamic>>(
-                    valueListenable: controller2.downloadBox.listenable(),
-                    builder: (_, box, __) {
-                      return Stack(
-                        children: [
-                          CustomScrollView(
-                            slivers: [
-                              _buildAppBar(album),
-                              SliverPadding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 48),
-                                sliver: SliverToBoxAdapter(
-                                  child: SizedBox(
-                                    height: 280,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        _buildHeader(
-                                          context,
-                                          title: 'Top Albums',
-                                          horizontalPadding: 8,
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Expanded(
-                                          child: ListView.builder(
-                                            shrinkWrap: true,
-                                            scrollDirection: Axis.horizontal,
-                                            itemCount: album.topAlbums.length,
-                                            itemBuilder: (context, index) {
-                                              return AlbumWidget(
-                                                album.topAlbums[index],
-                                                prefetched: false,
-                                              );
-                                            },
+            body: Padding(
+              padding:
+                  EdgeInsets.only(bottom: controller.showMiniPlayer ? 90 : 0),
+              child: controller.fetchingArtistDetails.value
+                  ? const Center(child: CircularProgressIndicator())
+                  : album == null
+                      ? const SizedBox.shrink()
+                      : ValueListenableBuilder<Box<dynamic>>(
+                          valueListenable: controller2.downloadBox.listenable(),
+                          builder: (_, box, __) {
+                            return Stack(
+                              children: [
+                                CustomScrollView(
+                                  slivers: [
+                                    _buildAppBar(album),
+                                    const SliverPadding(
+                                      padding: EdgeInsets.only(top: 48),
+                                    ),
+                                    if (album.topAlbums.isNotEmpty) ...[
+                                      SliverToBoxAdapter(
+                                        child: SizedBox(
+                                          height: 280,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              _buildHeader(
+                                                context,
+                                                title: 'Top Albums',
+                                                horizontalPadding: 8,
+                                              ),
+                                              const SizedBox(height: 16),
+                                              Expanded(
+                                                child: ListView.builder(
+                                                  shrinkWrap: true,
+                                                  scrollDirection:
+                                                      Axis.horizontal,
+                                                  itemCount:
+                                                      album.topAlbums.length,
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    return AlbumWidget(
+                                                      album.topAlbums[index],
+                                                      prefetched: false,
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                  ),
+                                      ),
+                                      const SliverPadding(
+                                        padding: EdgeInsets.only(top: 48),
+                                      ),
+                                    ],
+                                    if (album.topSongs.isNotEmpty)
+                                      SliverList(
+                                        delegate: SliverChildBuilderDelegate(
+                                          (context, index) {
+                                            if (index == 0) {
+                                              return _buildHeader(
+                                                context,
+                                                title: 'Top Songs',
+                                                onPressed: () {
+                                                  Get.toNamed(
+                                                    Routes.artistTopSong,
+                                                    arguments: token,
+                                                  );
+                                                },
+                                              );
+                                            }
+                                            if (index ==
+                                                (album.topSongs.length > 10
+                                                    ? 11
+                                                    : album.topSongs.length +
+                                                        1)) {
+                                              return const SizedBox(
+                                                height: 120,
+                                              );
+                                            }
+                                            return SingleSongTile(
+                                              songController: controller,
+                                              song: album.topSongs[index - 1]
+                                                  .mediaItem,
+                                            );
+                                          },
+                                          childCount: album.topSongs.length > 10
+                                              ? 12
+                                              : album.topSongs.length + 2,
+                                        ),
+                                      )
+                                  ],
                                 ),
-                              ),
-                              SliverList(
-                                delegate: SliverChildBuilderDelegate(
-                                  (context, index) {
-                                    if (index == 0) {
-                                      return _buildHeader(
-                                        context,
-                                        title: 'Top Songs',
-                                        onPressed: () {
-                                          Get.toNamed(
-                                            Routes.artistTopSong,
-                                            arguments: token,
-                                          );
-                                        },
-                                      );
-                                    }
-                                    return SingleSongTile(
-                                      songController: controller,
-                                      song: album.topSongs[index - 1].mediaItem,
-                                    );
-                                  },
-                                  childCount: album.topSongs.length > 10
-                                      ? 11
-                                      : album.topSongs.length + 1,
-                                ),
-                              )
-                            ],
-                          ),
-                        ],
-                      );
-                    },
-                  ),
+                              ],
+                            );
+                          },
+                        ),
+            ),
           );
         },
       ),
@@ -161,6 +185,7 @@ class ArtistDetailsScreen
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(color: controller.albumTextColor),
+            textAlign: TextAlign.center,
           ),
           stretchModes: const <StretchMode>[
             StretchMode.zoomBackground,
