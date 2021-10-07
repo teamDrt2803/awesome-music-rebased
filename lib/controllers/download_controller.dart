@@ -6,18 +6,18 @@ import 'package:audio_service/audio_service.dart';
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
 import 'package:awesome_music_rebased/utils/constants.dart';
 import 'package:awesome_music_rebased/utils/extensions.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:jiosaavn_wrapper/modals/search_result.dart';
+import 'package:jiosaavn_wrapper/modals/song.dart';
 // ignore: depend_on_referenced_packages
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class DownloadController extends GetxController {
-  late Directory downloadPath;
+  Rxn<Directory> downloadPath = Rxn();
   final ReceivePort _port = ReceivePort();
   Rxn<dynamic> downloadProgress = Rxn();
   Box downloadBox = Hive.box('downloads');
@@ -26,21 +26,14 @@ class DownloadController extends GetxController {
 
   Future<void> download(dynamic song) async {
     if (song is MediaItem) {
+      ///FIXME: Find the reason why disabling this lets the file to be donwloaded succesffully
       final taskId = await FlutterDownloader.enqueue(
         url: song.id,
-        savedDir: downloadPath.path,
-        fileName: '${song.title}.${song.id.split('.').last}',
+        savedDir: getLocalPath,
+        fileName: song.id.split('/').last,
+        openFileFromNotification: false,
       );
       if (taskId != null) {
-        ScaffoldMessenger.of(Get.overlayContext!).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Downloading ${song.title}',
-              style: Get.textTheme.button?.copyWith(color: Colors.green),
-            ),
-          ),
-        );
-        debugPrint('Successfully enqueued task with id as $taskId');
         await downloadBox.put(
           taskId,
           DownloadedSong(
@@ -54,19 +47,50 @@ class DownloadController extends GetxController {
             imageUrl: song.artUri.toString(),
             duration: (song.duration?.inSeconds) ?? 0,
             lyrics: (song.extras?['lyrics'] as String?) ?? '',
-            fileLocation:
-                '${downloadPath.path}${Platform.pathSeparator}${song.title}.${song.id.split('.').last}',
+            filename: song.id.split('/').last,
           ).toMap(),
         );
-      } else {
-        debugPrint('Failed to enqueue task');
-      }
+      } else {}
     } else if (song is SongSearchResult) {
       final songResult = await songController.jioSaavnWrapper
           .fetchSongDetails(songId: song.id);
       await download(songResult.mediaItem);
       return;
     }
+  }
+
+  Future<void> downloadPlaylist(String token) async {
+    debugPrint('downloading playlist..... for token $token');
+    final playlist = songController.playlists.value[token]!;
+    final songList = playlist.songs;
+    final downloadedList =
+        downloadBox.values.map((e) => DownloadedSong.fromMap(e));
+    for (final song in songList) {
+      if (!downloadedList.any((element) => element.mediaUrl == song.mediaURL)) {
+        await download(song.mediaItem);
+      }
+    }
+  }
+
+  Future<void> downloadArtistTopSongs(String token) async {
+    debugPrint('downloading topSongs..... for token $token');
+    final playlist = songController.artistDetails.value[token]!;
+    final songList = playlist.topSongs;
+    final downloadedList =
+        downloadBox.values.map((e) => DownloadedSong.fromMap(e));
+    for (final song in songList) {
+      if (!downloadedList.any((element) => element.mediaUrl == song.mediaURL)) {
+        await download(song.mediaItem);
+      }
+    }
+  }
+
+  bool isDownloaded(Song song) {
+    final downloadedList =
+        downloadBox.values.map((e) => DownloadedSong.fromMap(e));
+
+    return downloadedList
+        .any((downloaded) => downloaded.mediaUrl == song.mediaURL);
   }
 
   Future<void> _handleDownloadProgressChanged(dynamic data) async {
@@ -76,22 +100,11 @@ class DownloadController extends GetxController {
           DownloadedSong.fromMap(downloadBox.get(downloadCallback.id));
       if (downloadCallback.status == DownloadTaskStatus.failed ||
           downloadCallback.status == DownloadTaskStatus.canceled) {
-        await delete(downloadCallback.id);
+        await FlutterDownloader.retry(taskId: downloadedSong.taskId);
         return;
       }
       if (downloadCallback.status == DownloadTaskStatus.complete) {
-        debugPrint(
-          'Filed existing status is: ${File(downloadedSong.fileLocation).existsSync()}',
-        );
-        if (!File(downloadedSong.fileLocation).existsSync()) {
-          ScaffoldMessenger.of(Get.overlayContext!).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Failed to download ${downloadedSong.title}',
-                style: Get.textTheme.button?.copyWith(color: Colors.red),
-              ),
-            ),
-          );
+        if (!(await File(downloadedSong.fileLocation).exists())) {
           await delete(downloadCallback.id);
         } else {
           downloadBox.put(
@@ -102,14 +115,6 @@ class DownloadController extends GetxController {
                   downloadProgress: downloadCallback.progress,
                 )
                 .toMap(),
-          );
-          ScaffoldMessenger.of(Get.overlayContext!).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Downloaded ${downloadedSong.title}',
-                style: Get.textTheme.button?.copyWith(color: Colors.green),
-              ),
-            ),
           );
           await songController.audioHandler
               .addQueueItem(downloadedSong.mediaItem);
@@ -128,33 +133,58 @@ class DownloadController extends GetxController {
     }
   }
 
+  Future<void> deletePlaylist(String token) async {
+    debugPrint('deleting playlist..... for token $token');
+    final playlist = songController.playlists.value[token]!;
+    final songList = playlist.songs;
+    final downloadedList =
+        downloadBox.values.map((e) => DownloadedSong.fromMap(e));
+    for (final song in downloadedList) {
+      if (songList.any((element) => element.mediaURL == song.mediaUrl)) {
+        await delete(song.taskId);
+      }
+    }
+  }
+
+  Future<void> deleteArtistTopSongs(String token) async {
+    debugPrint('deleting playlist..... for token $token');
+    final playlist = songController.artistDetails.value[token]!;
+    final songList = playlist.topSongs;
+    final downloadedList =
+        downloadBox.values.map((e) => DownloadedSong.fromMap(e));
+    for (final song in downloadedList) {
+      if (songList.any((element) => element.mediaURL == song.mediaUrl)) {
+        await delete(song.taskId);
+      }
+    }
+  }
+
   Future<void> delete(String taskId) async {
     await FlutterDownloader.remove(
       taskId: taskId,
-      shouldDeleteContent: true,
     ).then((value) async {
       final downloadedSong = DownloadedSong.fromMap(downloadBox.get(taskId));
+      if (File(downloadedSong.filename).existsSync()) {
+        await File(downloadedSong.filename).delete();
+      }
       await downloadBox.delete(taskId);
       await songController.audioHandler
           .removeQueueItem(downloadedSong.mediaItem);
     });
   }
 
-  Future<String?> getPath(String taskId) async {
-    return FlutterDownloader.loadTasksWithRawQuery(
-      query: 'SELECT * FROM task WHERE task_id="$taskId"',
-    ).then(
-      (value) => (value == null || value.isEmpty)
-          ? null
-          : value.first.savedDir.replaceAll('/(null)', '') +
-              Platform.pathSeparator +
-              value.first.filename!,
-    );
+  String get getLocalPath =>
+      (downloadPath.value?.path ?? '') + Platform.pathSeparator;
+
+  @override
+  Future<void> onInit() async {
+    super.onInit();
   }
 
   @override
   Future<void> onReady() async {
     super.onReady();
+    downloadPath.value = await getApplicationDocumentsDirectory();
     await FlutterDownloader.registerCallback(downloadCallback);
     await Permission.storage.request();
     ever(downloadProgress, _handleDownloadProgressChanged);
@@ -170,18 +200,41 @@ class DownloadController extends GetxController {
       );
     }
     downloadProgress.bindStream(_port.asBroadcastStream());
-    debugPrint('Port registration result was $registered');
-    await FlutterDownloader.loadTasks();
-    downloadPath = await getApplicationDocumentsDirectory();
-    for (final value in downloadBox.values) {
-      final downloadedSong = DownloadedSong.fromMap(value);
-      if (downloadedSong.downloadProgress == 0 ||
-          downloadedSong.status == DownloadTaskStatus.failed ||
-          downloadedSong.status == DownloadTaskStatus.canceled) {
-        delete(downloadedSong.taskId);
+    for (final value
+        in downloadBox.values.map((e) => DownloadedSong.fromMap(e))) {
+      debugPrint(value.status.toString());
+      if (await File(value.fileLocation).exists()) {
+        if (value.status != DownloadTaskStatus.complete) {
+          if (value.status == DownloadTaskStatus.paused) {
+            FlutterDownloader.resume(taskId: value.taskId);
+          } else if (value.status == DownloadTaskStatus.failed) {
+            final newTaskId =
+                await FlutterDownloader.retry(taskId: value.taskId);
+            downloadBox.delete(value.taskId);
+            downloadBox.put(
+              newTaskId,
+              value.copyWith(taskId: newTaskId).toMap(),
+            );
+          } else if (value.status == DownloadTaskStatus.canceled) {
+            delete(value.taskId);
+          } else if (value.status == DownloadTaskStatus.enqueued) {
+            try {
+              final newTaskId =
+                  await FlutterDownloader.retry(taskId: value.taskId);
+              downloadBox.delete(value.taskId);
+              downloadBox.put(
+                newTaskId,
+                value.copyWith(taskId: newTaskId).toMap(),
+              );
+            } catch (e) {
+              delete(value.taskId);
+            }
+          }
+        } else {
+          await songController.audioHandler.addQueueItem(value.mediaItem);
+        }
       } else {
-        await songController.audioHandler
-            .addQueueItem(downloadedSong.mediaItem);
+        delete(value.taskId);
       }
     }
   }
@@ -224,7 +277,7 @@ class DownloadedSong {
   final int duration;
   final bool hasLyrics;
   final String? lyrics;
-  final String fileLocation;
+  final String filename;
 
   DownloadedSong({
     required this.taskId,
@@ -236,7 +289,7 @@ class DownloadedSong {
     required this.downloadProgress,
     required this.imageUrl,
     required this.duration,
-    required this.fileLocation,
+    required this.filename,
     this.hasLyrics = false,
     this.lyrics,
   });
@@ -253,7 +306,7 @@ class DownloadedSong {
         'hasLyrics': hasLyrics,
         'lyrics': lyrics,
         'duration': duration,
-        'fileLocation': fileLocation,
+        'filename': filename,
       };
 
   factory DownloadedSong.fromMap(dynamic map) {
@@ -269,7 +322,7 @@ class DownloadedSong {
       duration: map['duration'] as int,
       hasLyrics: map['hasLyrics'] as bool,
       lyrics: map['lyrics'] as String?,
-      fileLocation: map['fileLocation'] as String,
+      filename: map['filename'] as String,
     );
   }
 
@@ -285,7 +338,7 @@ class DownloadedSong {
     int? duration,
     bool? hasLyrics,
     String? lyrics,
-    String? fileLocation,
+    String? filename,
   }) =>
       DownloadedSong(
         taskId: taskId ?? this.taskId,
@@ -299,8 +352,11 @@ class DownloadedSong {
         duration: duration ?? this.duration,
         hasLyrics: hasLyrics ?? this.hasLyrics,
         lyrics: lyrics ?? lyrics,
-        fileLocation: fileLocation ?? this.fileLocation,
+        filename: filename ?? this.filename,
       );
+
+  String get fileLocation =>
+      Get.find<DownloadController>().getLocalPath + filename;
 
   MediaItem get mediaItem => MediaItem(
         id: fileLocation,
@@ -317,6 +373,9 @@ class DownloadedSong {
           'taskId': taskId,
           'fileLocation': fileLocation,
           'download': true,
+          'filename': filename,
         },
       );
 }
+
+//flutter: File name is  /var/mobile/Containers/Data/Application/B91A88C1-A65F-42A9-A3A5-C7088AEB1F32/Documents/115d5cb9924b84b4b8ff3a5a4d732ef1_96.mp4
