@@ -126,7 +126,8 @@ class AlbumWidget extends GetView<SongController> {
                         borderRadius: BorderRadius.circular(10),
                         image: DecorationImage(
                           image: CachedNetworkImageProvider(
-                              playlist.mediumResImage),
+                            playlist.mediumResImage,
+                          ),
                           fit: BoxFit.cover,
                         ),
                       ),

@@ -34,12 +34,15 @@ extension Cleansing on String? {
     if (this!.length < 8) {
       return 'Password should not be less than 8 characters';
     }
+    // ignore: unnecessary_raw_strings
     if (!this!.contains(RegExp(r"[a-z]"))) {
       return 'Password should contain atleast 1 lowercase letter';
     }
+    // ignore: unnecessary_raw_strings
     if (!this!.contains(RegExp(r"[A-Z]"))) {
       return 'Password should contain atleast 1 uppercase letter';
     }
+    // ignore: unnecessary_raw_strings
     if (!this!.contains(RegExp(r"[0-9]"))) {
       return 'Password should contain atleast 1 digit';
     }
