@@ -62,7 +62,6 @@ class DownloadController extends GetxController {
   }
 
   Future<void> downloadPlaylist(String token) async {
-    debugPrint('downloading playlist..... for token $token');
     final playlist = songController.playlists.value[token]!;
     final songList = playlist.songs;
     final downloadedList =
@@ -75,7 +74,6 @@ class DownloadController extends GetxController {
   }
 
   Future<void> downloadArtistTopSongs(String token) async {
-    debugPrint('downloading topSongs..... for token $token');
     final playlist = songController.artistDetails.value[token]!;
     final songList = playlist.topSongs;
     final downloadedList =
@@ -136,7 +134,6 @@ class DownloadController extends GetxController {
   }
 
   Future<void> deletePlaylist(String token) async {
-    debugPrint('deleting playlist..... for token $token');
     final playlist = songController.playlists.value[token]!;
     final songList = playlist.songs;
     final downloadedList =
@@ -149,7 +146,6 @@ class DownloadController extends GetxController {
   }
 
   Future<void> deleteArtistTopSongs(String token) async {
-    debugPrint('deleting playlist..... for token $token');
     final playlist = songController.artistDetails.value[token]!;
     final songList = playlist.topSongs;
     final downloadedList =
@@ -215,7 +211,6 @@ class DownloadController extends GetxController {
     downloadProgress.bindStream(_port.asBroadcastStream());
     for (final value
         in downloadBox.values.map((e) => DownloadedSong.fromMap(e))) {
-      debugPrint(value.status.toString());
       if (await File(value.fileLocation).exists()) {
         if (value.status != DownloadTaskStatus.complete) {
           if (value.status == DownloadTaskStatus.paused) {

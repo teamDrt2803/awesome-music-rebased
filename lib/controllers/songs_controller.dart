@@ -174,7 +174,6 @@ class SongController extends GetxController {
       searchResult.value = null;
       return;
     } else {
-      debugPrint('Fetching Results for query $searchQuery');
       searchResult.value =
           await jioSaavnWrapper.fetchSearchResults(searchQuery: searchQuery);
     }
@@ -225,7 +224,6 @@ class SongController extends GetxController {
       arguments: album.token,
     );
     if (album is AlbumSearchResult) {
-      debugPrint(album.token);
       if (playlistFromList(album.token) == null) {
         try {
           final oldPlaylist = playlists.value;
@@ -236,7 +234,6 @@ class SongController extends GetxController {
           fetchingAlbumDetails.value = false;
         } catch (_) {
           fetchingAlbumDetails.value = false;
-          debugPrintStack();
         }
       } else {
         await assignCachedNetworkImageFromAlbum(album.token, isAlbum: true);
@@ -253,7 +250,6 @@ class SongController extends GetxController {
           fetchingAlbumDetails.value = false;
         } catch (_) {
           fetchingAlbumDetails.value = false;
-          debugPrintStack();
         }
       } else {
         await assignCachedNetworkImageFromAlbum(album.token, isAlbum: true);
@@ -268,7 +264,6 @@ class SongController extends GetxController {
       Routes.artistDetailsScreen,
       arguments: artist.token,
     );
-    debugPrint(artist.token);
     if (artistDetailsFromList(artist.token) == null) {
       try {
         final oldArtistDetails = artistDetails.value;
@@ -277,10 +272,8 @@ class SongController extends GetxController {
         await assignCachedNetworkImageFromAlbum(artist.token);
         artistDetails.value = oldArtistDetails;
         fetchingArtistDetails.value = false;
-      } catch (_, stackTrace) {
-        debugPrint(_.toString());
+      } catch (_) {
         fetchingArtistDetails.value = false;
-        debugPrintStack(stackTrace: stackTrace);
       }
     } else {
       await assignCachedNetworkImageFromAlbum(artist.token);
@@ -304,7 +297,6 @@ class SongController extends GetxController {
 
   Future<void> addItemsToQueue(dynamic data) async {
     if (data is ArtistDetails) {
-      debugPrint('Adding TopSong from ArtistDetails Modal');
       final details = data;
       await audioHandler
           .addQueueItems(details.topSongs.map((e) => e.mediaItem).toList());

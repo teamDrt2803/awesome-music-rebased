@@ -95,7 +95,6 @@ class AudioPlayerHandler extends BaseAudioHandler
     if (audioPlayer.audioSource != null) {
       await (audioPlayer.audioSource! as ConcatenatingAudioSource).addAll(
         mediaItems.map((m) {
-          debugPrint(m.id);
           return AudioSource.uri(
             ((m.extras?['download'] as bool?) ?? false)
                 ? Uri.file(m.id)
@@ -120,9 +119,7 @@ class AudioPlayerHandler extends BaseAudioHandler
             ],
           ),
         );
-      } on PlatformException catch (_) {
-        debugPrintStack();
-      }
+      } on PlatformException catch (_) {}
     }
   }
 

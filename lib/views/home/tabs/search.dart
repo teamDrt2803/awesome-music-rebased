@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:get/get_state_manager/get_state_manager.dart';
+import 'package:lottie/lottie.dart';
 
 class SearchScreen extends GetView<SongController> {
   const SearchScreen({Key? key}) : super(key: key);
@@ -26,7 +27,14 @@ class SearchScreen extends GetView<SongController> {
           Expanded(
             child: Obx(
               () => controller.currentSearchResult == null
-                  ? const Center(child: Icon(Icons.search))
+                  ? Center(
+                      child: Lottie.asset(
+                        'assets/lottie/search.json',
+                        frameRate: FrameRate(60),
+                        height: Get.width,
+                        width: Get.width,
+                      ),
+                    )
                   : SingleChildScrollView(
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 100),

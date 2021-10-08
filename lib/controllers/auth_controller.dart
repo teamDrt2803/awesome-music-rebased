@@ -49,7 +49,7 @@ class AuthController extends GetxController {
       email: emailController.text,
       password: passwordController.text,
       onError: (error) {
-        debugPrint(error);
+        errorStream.value = error;
       },
     );
     isSigningUp.value = false;
