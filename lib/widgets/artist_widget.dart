@@ -18,37 +18,43 @@ class ArtistWidget extends GetView<SongController> {
       onTap: () {
         controller.fetchArtistDetails(artist);
       },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            height: Get.width * 0.4,
-            width: Get.width * 0.4,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              image: DecorationImage(
-                image: NetworkImage(artist.image),
-                fit: BoxFit.cover,
+      child: SizedBox(
+        height: Get.width * 0.45,
+        width: Get.width * 0.5,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              height: Get.width * 0.4,
+              width: Get.width * 0.4,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                image: DecorationImage(
+                  image: NetworkImage(artist.image),
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            artist.title,
-            style: Theme.of(context)
-                .textTheme
-                .subtitle1
-                ?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1),
-          ),
-          Text(
-            describeEnum(artist.type)[0].toUpperCase() +
-                describeEnum(artist.type).substring(1),
-            style: Theme.of(context)
-                .textTheme
-                .subtitle1
-                ?.copyWith(letterSpacing: 1, color: Colors.black54),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              artist.title,
+              style: Theme.of(context)
+                  .textTheme
+                  .subtitle1
+                  ?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              describeEnum(artist.type)[0].toUpperCase() +
+                  describeEnum(artist.type).substring(1),
+              style: Theme.of(context)
+                  .textTheme
+                  .subtitle1
+                  ?.copyWith(letterSpacing: 1, color: Colors.black54),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:jiosaavn_wrapper/modals/playlist.dart';
 import 'package:jiosaavn_wrapper/modals/search_result.dart';
 import 'package:jiosaavn_wrapper/modals/song.dart';
 // ignore: depend_on_referenced_packages
@@ -23,6 +24,7 @@ class DownloadController extends GetxController {
   Box downloadBox = Hive.box('downloads');
   RxList<DownloadedSong> downloadedSongs = RxList();
   SongController songController = Get.find();
+  Rxn<Playlist> downloads = Rxn();
 
   Future<void> download(dynamic song) async {
     if (song is MediaItem) {
@@ -188,6 +190,17 @@ class DownloadController extends GetxController {
     await FlutterDownloader.registerCallback(downloadCallback);
     await Permission.storage.request();
     ever(downloadProgress, _handleDownloadProgressChanged);
+    downloads.value = Playlist(
+      id: 'downloadedSongs',
+      title: 'Downloaded Songs',
+      subtitle: 'List of all your downloaded songs',
+      description: '',
+      permaURL: '',
+      image: 'https://www.jiosaavn.com/_i/3.0/artist-default-music.png',
+      totalSongs: 0,
+      songs: [],
+      followers: 0,
+    );
     var registered = IsolateNameServer.registerPortWithName(
       _port.sendPort,
       downloadPortName,
@@ -231,7 +244,10 @@ class DownloadController extends GetxController {
             }
           }
         } else {
-          await songController.audioHandler.addQueueItem(value.mediaItem);
+          downloads.value = downloads.value?.copyWith(
+            totalSongs: downloads.value!.totalSongs,
+            songs: [...downloads.value!.songs, value.song],
+          );
         }
       } else {
         delete(value.taskId);
@@ -375,6 +391,27 @@ class DownloadedSong {
           'download': true,
           'filename': filename,
         },
+      );
+  Song get song => Song(
+        id: fileLocation,
+        albumId: '',
+        album: '',
+        label: '',
+        title: title,
+        subtitle: subtitle,
+        lowResImage: imageUrl.lowRes,
+        mediumResImage: imageUrl.mediumRes,
+        highResImage: imageUrl.highRes,
+        imageURI: Uri.parse(imageUrl),
+        playCount: 0,
+        year: 2021,
+        permaURL: '',
+        hasLyrics: hasLyrics,
+        copyRightText: '',
+        mediaURL: mediaUrl,
+        duration: Duration(seconds: duration),
+        releaseDate: DateTime(2021),
+        allArtists: [],
       );
 }
 

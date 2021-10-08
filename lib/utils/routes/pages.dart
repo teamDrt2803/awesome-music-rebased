@@ -1,4 +1,6 @@
 import 'package:awesome_music_rebased/utils/routes/routes.dart';
+import 'package:awesome_music_rebased/views/auth/login.dart';
+import 'package:awesome_music_rebased/views/auth/signup.dart';
 import 'package:awesome_music_rebased/views/full_screen_player.dart';
 import 'package:awesome_music_rebased/views/grouped_song/album_sreen.dart';
 import 'package:awesome_music_rebased/views/grouped_song/artist_details_screen.dart';
@@ -30,4 +32,12 @@ List<GetPage> get pages => [
         name: Routes.artistTopSong,
         page: () => ArtistTopSongs(),
       ),
+      GetPage(
+        name: Routes.login,
+        page: () => LoginScreen(),
+      ),
+      GetPage(
+        name: Routes.signUp,
+        page: () => SignUpScreen(),
+      )
     ];

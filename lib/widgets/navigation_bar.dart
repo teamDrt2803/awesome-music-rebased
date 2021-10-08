@@ -36,8 +36,8 @@ class NavigationBar extends GetView<AppController> {
               label: 'Playlist',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.download_outlined),
-              label: 'Downloads',
+              icon: Icon(Icons.person_outline),
+              label: 'Account',
             ),
           ],
         ),
