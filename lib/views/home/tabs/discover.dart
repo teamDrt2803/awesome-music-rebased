@@ -120,13 +120,16 @@ class AlbumWidget extends GetView<SongController> {
             Expanded(
               child: Container(
                 width: 180,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  image: DecorationImage(
-                    image: CachedNetworkImageProvider(playlist.mediumResImage),
-                    fit: BoxFit.cover,
-                  ),
-                ),
+                decoration: playlist.image.isEmpty
+                    ? null
+                    : BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        image: DecorationImage(
+                          image: CachedNetworkImageProvider(
+                              playlist.mediumResImage),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
               ),
             ),
             const SizedBox(height: 8),

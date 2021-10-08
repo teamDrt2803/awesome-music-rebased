@@ -161,7 +161,8 @@ class AlbumScreen
                                               downloadedIndex != -1
                                                   ? DownloadedSong.fromMap(
                                                       box.getAt(
-                                                          downloadedIndex),
+                                                        downloadedIndex,
+                                                      ),
                                                     )
                                                   : null;
                                           final progress = downloadedSong
@@ -192,6 +193,8 @@ class AlbumScreen
                                     ),
                                   ],
                                 ),
+
+                                ///FIXME: Fix Edge cases for downloaded song and move this whole logic to controllers
                                 Obx(
                                   () => Positioned(
                                     top: controller3.fab.value,
@@ -219,7 +222,14 @@ class AlbumScreen
                                             );
                                           }
                                           if (controller2.isDownloaded(
-                                              album.songs.first)) {
+                                            album.songs.first,
+                                          )) {
+                                            await controller.audioHandler
+                                                .addQueueItems(
+                                              album.songs
+                                                  .map((e) => e.mediaItem)
+                                                  .toList(),
+                                            );
                                             controller.playSong(localPath);
                                           } else {
                                             controller.playSong(
@@ -243,7 +253,8 @@ class AlbumScreen
                                               ?.color ??
                                           controller.albumTopColor,
                                       child: controller.isThisPlaylistPlaying(
-                                                  token) &&
+                                                token,
+                                              ) &&
                                               controller.isPlaying
                                           ? Icon(
                                               Icons.pause_outlined,

@@ -4,4 +4,6 @@ class Routes {
   static const albumScreen = '/album-screen';
   static const artistDetailsScreen = '/artist-details-screen';
   static const artistTopSong = '/artist-top-songs';
+  static const login = '/login';
+  static const signUp = '/sign-up';
 }
