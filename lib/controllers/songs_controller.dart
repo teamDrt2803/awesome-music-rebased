@@ -37,9 +37,13 @@ class SongController extends GetxController {
   Rx<Map<String, bool>> showLyrics = Rx({});
   Rxn<SearchResult> searcResult = Rxn();
   Rxn<TopSearchResult> topSearchResult = Rxn();
+  Rxn<SearchResult> searchResult = Rxn();
+  RxnString searchQuery = RxnString();
   Rx<Map<String, Playlist>> playlists = Rx({});
   Rx<Map<String, ArtistDetails>> artistDetails = Rx({});
   RxBool fetchingAlbumDetails = RxBool(false);
+  RxBool fetchingArtistDetails = RxBool(false);
+  TextEditingController searchController = TextEditingController();
 
   ///AudioHandler Variables
   late AudioHandler audioHandler;
@@ -50,6 +54,12 @@ class SongController extends GetxController {
 
   ///Getter for accessign list of topSongs
   List<Song> get topSongList => topSongs.value?.songs ?? [];
+
+  ///Gives you the current result for the latest search query
+  SearchResult? get currentSearchResult => searchResult.value;
+
+  ///Gives you the current Search Query
+  String? get currentSearchQuery => searchQuery.value;
 
   ///Current Processing State of AudioService
   ProcessingState get currentProcessingState => processingStateStream.value;
@@ -81,9 +91,13 @@ class SongController extends GetxController {
       paletteGenerator.value?.mutedColor?.bodyTextColor.withOpacity(1);
 
   ///List of Graient colors for Album Details Screen
-  Color? get albumTopColor => albumPaletteGenerator.value?.mutedColor?.color;
+  Color? get albumTopColor =>
+      albumPaletteGenerator.value?.mutedColor?.color ??
+      albumPaletteGenerator.value?.colors.first;
   Color? get albumBottomColor =>
-      albumPaletteGenerator.value?.darkMutedColor?.color ?? topColor;
+      albumPaletteGenerator.value?.darkMutedColor?.color ??
+      albumTopColor ??
+      albumPaletteGenerator.value?.colors.first;
   Color? get albumTextColor =>
       albumPaletteGenerator.value?.darkMutedColor?.bodyTextColor
           .withOpacity(1) ??
@@ -155,6 +169,17 @@ class SongController extends GetxController {
   Future<void> handleSeek(Duration position) async =>
       audioHandler.seek(position);
 
+  Future<void> _handleSearchQueryChange(String? searchQuery) async {
+    if (searchQuery == null || searchQuery.isEmpty) {
+      searchResult.value = null;
+      return;
+    } else {
+      debugPrint('Fetching Results for query $searchQuery');
+      searchResult.value =
+          await jioSaavnWrapper.fetchSearchResults(searchQuery: searchQuery);
+    }
+  }
+
   Future<void> _handleCurrentMediaItemUpdate(MediaItem? mediaItem) async {
     if (mediaItem != null) {
       cachedNetworkImageProvider.value =
@@ -200,6 +225,7 @@ class SongController extends GetxController {
       arguments: album.token,
     );
     if (album is AlbumSearchResult) {
+      debugPrint(album.token);
       if (playlistFromList(album.token) == null) {
         try {
           final oldPlaylist = playlists.value;
@@ -237,21 +263,28 @@ class SongController extends GetxController {
   }
 
   Future<void> fetchArtistDetails(ArtistSearchResult artist) async {
+    fetchingArtistDetails.value = true;
     Get.toNamed(
       Routes.artistDetailsScreen,
       arguments: artist.token,
     );
+    debugPrint(artist.token);
     if (artistDetailsFromList(artist.token) == null) {
       try {
-        artistDetails.value[artist.token] =
+        final oldArtistDetails = artistDetails.value;
+        oldArtistDetails[artist.token] =
             await jioSaavnWrapper.fetchArtistDetails(artist.token);
         await assignCachedNetworkImageFromAlbum(artist.token);
+        artistDetails.value = oldArtistDetails;
+        fetchingArtistDetails.value = false;
       } catch (_, stackTrace) {
         debugPrint(_.toString());
+        fetchingArtistDetails.value = false;
         debugPrintStack(stackTrace: stackTrace);
       }
     } else {
       await assignCachedNetworkImageFromAlbum(artist.token);
+      fetchingArtistDetails.value = false;
     }
   }
 
@@ -301,9 +334,14 @@ class SongController extends GetxController {
     );
     await audioHandler.prepare();
     fullScreenThumbController = PageController(keepPage: false);
+
+    ///Handler for Rx values are set below
+    ever(searchQuery, _handleSearchQueryChange);
     ever(currentIndex, handleCurrentSongIndexUpdate);
     ever(currentSong, _handleCurrentMediaItemUpdate);
     ever(queueStream, _handleQueueStream);
+
+    ///All the streams binding logic will happen below
     currentSong.bindStream(audioHandler.mediaItem);
     currentIndex.bindStream(audioPlayer.currentIndexStream);
     playingStream.bindStream(audioPlayer.playingStream);
@@ -311,6 +349,12 @@ class SongController extends GetxController {
     queueStream.bindStream(audioHandler.queue);
     playBackStream.bindStream(audioPlayer.playbackEventStream);
     positionStream.bindStream(audioPlayer.positionStream);
+    searchController.addListener(() {
+      searchQuery.value = searchController.text;
+    });
+
+    //Initialise by getting top Songs
     getTopSongs();
+    fetchTrendingSearches();
   }
 }

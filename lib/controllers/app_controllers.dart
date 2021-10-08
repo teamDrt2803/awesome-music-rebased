@@ -1,4 +1,3 @@
-import 'package:awesome_music_rebased/controllers/songs_controller.dart';
 import 'package:awesome_music_rebased/utils/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -17,10 +16,6 @@ class AppController extends GetxController {
     }
     _currentIndex.value = index;
     pageController.jumpToPage(index);
-    if (index == 1 &&
-        Get.find<SongController>().topSearchResult.value == null) {
-      Get.find<SongController>().fetchTrendingSearches();
-    }
     fab.value = buildFab(reset: true);
   }
 
@@ -58,5 +53,6 @@ class AppController extends GetxController {
     scrollController.addListener(() {
       fab.value = buildFab();
     });
+    currentIndex = 1;
   }
 }

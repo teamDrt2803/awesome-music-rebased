@@ -12,13 +12,20 @@ class AwesomeMusic extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      showPerformanceOverlay: kProfileMode,
-      debugShowCheckedModeBanner: false,
-      theme: theme,
-      getPages: pages,
-      initialRoute: Routes.home,
-      initialBinding: InitialBindings(),
+    return GestureDetector(
+      onTap: () {
+        if (FocusManager.instance.primaryFocus != null) {
+          FocusManager.instance.primaryFocus!.unfocus();
+        }
+      },
+      child: GetMaterialApp(
+        showPerformanceOverlay: kProfileMode,
+        debugShowCheckedModeBanner: false,
+        theme: theme,
+        getPages: pages,
+        initialRoute: Routes.home,
+        initialBinding: InitialBindings(),
+      ),
     );
   }
 }

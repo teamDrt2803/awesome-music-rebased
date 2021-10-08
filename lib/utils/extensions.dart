@@ -28,14 +28,43 @@ extension Cleansing on String? {
     final decrypted = desECB.decrypt(base64Decode(this!));
     return utf8.decode(decrypted);
   }
+
+  String? get isPasswordValid {
+    if (this == null) return 'Please enter a valid password';
+    if (this!.length < 8) {
+      return 'Password should not be less than 8 characters';
+    }
+    // ignore: unnecessary_raw_strings
+    if (!this!.contains(RegExp(r"[a-z]"))) {
+      return 'Password should contain atleast 1 lowercase letter';
+    }
+    // ignore: unnecessary_raw_strings
+    if (!this!.contains(RegExp(r"[A-Z]"))) {
+      return 'Password should contain atleast 1 uppercase letter';
+    }
+    // ignore: unnecessary_raw_strings
+    if (!this!.contains(RegExp(r"[0-9]"))) {
+      return 'Password should contain atleast 1 digit';
+    }
+    if (!this!.contains(RegExp(r'[!@#$%^&£*(),.?":{}|<>]'))) {
+      return 'Password should contain atleast 1 special character';
+    }
+    return null;
+  }
+
+  String? get isPhoneValid {
+    if (this == null) return 'Please enter a valid Phone';
+    if (this!.length < 10) return 'Please enter a valid Phone';
+    return null;
+  }
 }
 
 extension SongExtensions on Song {
   MediaItem get mediaItem => MediaItem(
-        id: mediaURL,
+        id: mediaURL.isEmpty ? id : mediaURL,
         title: title,
         album: album,
-        artist: artist.first.name,
+        artist: artist.isNotEmpty ? artist.first.name : '',
         duration: duration,
         artUri: imageURI,
         displaySubtitle: subtitle,
