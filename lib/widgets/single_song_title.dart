@@ -92,9 +92,8 @@ class SingleSongTile extends GetView<DownloadController> {
                 : (downloaded && progress > 0 && progress < 100)
                     ? CircleProgressBar(
                         value: progress / 100,
-                        backgroundColor:
-                            colorBrandPrimaryLight.withOpacity(0.2),
-                        foregroundColor: colorBrandPrimary,
+                        backgroundColor: Colors.black.withOpacity(0.2),
+                        foregroundColor: Colors.black,
                         aspectRatio: 0.7,
                         strokeWidth: 5.5,
                       )
