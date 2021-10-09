@@ -62,7 +62,7 @@ class UserController extends GetxController with SingleGetTickerProviderMixin {
           'id': 'favourite_song_${favouriteSongs.length + 1}',
           'image': selectedSong.artUri.toString(),
           'mediaUrl':
-              downloaded ? selectedSong.id : selectedSong.extras!['mediaUrl'],
+              !downloaded ? selectedSong.id : selectedSong.extras!['mediaUrl'],
           'title': selectedSong.title,
           'subtitle': selectedSong.displaySubtitle,
           'description': selectedSong.displayDescription,
