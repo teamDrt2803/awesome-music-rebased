@@ -378,10 +378,10 @@ packages:
   jiosaavn_wrapper:
     dependency: "direct main"
     description:
-      path: "../jiosaavn_wrapper"
-      relative: true
-    source: path
-    version: "0.0.2+17"
+      name: jiosaavn_wrapper
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.0.2+18"
   js:
     dependency: transitive
     description:
