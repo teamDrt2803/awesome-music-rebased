@@ -1,4 +1,5 @@
 import 'package:awesome_music_rebased/controllers/app_controllers.dart';
+import 'package:awesome_music_rebased/controllers/user_controller.dart';
 import 'package:awesome_music_rebased/utils/routes/routes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -49,7 +50,7 @@ class AuthController extends GetxController {
       email: emailController.text,
       password: passwordController.text,
       onError: (error) {
-        debugPrint(error);
+        errorStream.value = error;
       },
     );
     isSigningUp.value = false;
@@ -96,6 +97,7 @@ class AuthController extends GetxController {
       Get.toNamed(Routes.login);
     } else {
       _handleAuthTypeChange(authType.value);
+      Get.find<UserController>().handleSignIn();
 
       ///Checks if the current route is home
       ///If not then route the app to homescreen

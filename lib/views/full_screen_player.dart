@@ -1,6 +1,8 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
+import 'package:awesome_music_rebased/controllers/user_controller.dart';
 import 'package:awesome_music_rebased/widgets/cust_app_bar.dart';
+import 'package:awesome_music_rebased/widgets/get_view_2.dart';
 import 'package:awesome_music_rebased/widgets/lyrics_widget.dart';
 import 'package:awesome_music_rebased/widgets/seek_bar.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -11,7 +13,7 @@ import 'package:get/get_state_manager/get_state_manager.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:marquee/marquee.dart';
 
-class FullScreenPlayer extends GetWidget<SongController> {
+class FullScreenPlayer extends GetView2<SongController, UserController> {
   const FullScreenPlayer({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
@@ -174,8 +176,16 @@ class FullScreenPlayer extends GetWidget<SongController> {
                       ),
                     ),
                     trailing: IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.favorite_border),
+                      onPressed: () {
+                        if (controller2.isSongFavourite(song.id)) {
+                          controller2.deleteFromFavouriteSong<MediaItem>(song);
+                        } else {
+                          controller2.addToFavouriteSong<MediaItem>(song);
+                        }
+                      },
+                      icon: controller2.isSongFavourite(song.id)
+                          ? Icon(Icons.favorite, color: textColor)
+                          : const Icon(Icons.favorite_border),
                       color: textColor,
                     ),
                   ),

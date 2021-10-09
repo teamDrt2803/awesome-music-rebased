@@ -19,8 +19,8 @@ class DiscoverScreen extends GetView<SongController> {
       child: Obx(
         () {
           final result = controller.topSearchResult.value;
-          return result == null
-              ? const SizedBox.shrink()
+          return result == null || controller.topSongList.isEmpty
+              ? const Center(child: CircularProgressIndicator())
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:audio_service/audio_service.dart';
+import 'package:awesome_music_rebased/model/favourite_song.dart';
 import 'package:dart_des/dart_des.dart';
 import 'package:jiosaavn_wrapper/modals/song.dart';
 
@@ -72,5 +73,18 @@ extension SongExtensions on Song {
           'hasLyrics': hasLyrics,
           'lyrics': lyrics,
         },
+      );
+}
+
+extension FavouriteSongExtensions on FavouriteSong {
+  MediaItem get mediaItem => MediaItem(
+        id: mediaUrl,
+        title: title,
+        album: '',
+        artist: '',
+        duration: Duration(seconds: duration),
+        artUri: Uri.parse(image),
+        displaySubtitle: subtitle,
+        extras: {},
       );
 }

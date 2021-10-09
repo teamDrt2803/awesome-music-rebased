@@ -6,7 +6,6 @@ import 'package:audio_service/audio_service.dart';
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
 import 'package:awesome_music_rebased/utils/constants.dart';
 import 'package:awesome_music_rebased/utils/extensions.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -62,7 +61,6 @@ class DownloadController extends GetxController {
   }
 
   Future<void> downloadPlaylist(String token) async {
-    debugPrint('downloading playlist..... for token $token');
     final playlist = songController.playlists.value[token]!;
     final songList = playlist.songs;
     final downloadedList =
@@ -75,7 +73,6 @@ class DownloadController extends GetxController {
   }
 
   Future<void> downloadArtistTopSongs(String token) async {
-    debugPrint('downloading topSongs..... for token $token');
     final playlist = songController.artistDetails.value[token]!;
     final songList = playlist.topSongs;
     final downloadedList =
@@ -90,9 +87,15 @@ class DownloadController extends GetxController {
   bool isDownloaded(Song song) {
     final downloadedList =
         downloadBox.values.map((e) => DownloadedSong.fromMap(e));
-
     return downloadedList
         .any((downloaded) => downloaded.mediaUrl == song.mediaURL);
+  }
+
+  DownloadedSong fromSongToDownloadedSong(Song song) {
+    final downloadedList =
+        downloadBox.values.map((e) => DownloadedSong.fromMap(e)).toList();
+    return downloadedList
+        .firstWhere((downloaded) => downloaded.mediaUrl == song.mediaURL);
   }
 
   Future<void> _handleDownloadProgressChanged(dynamic data) async {
@@ -136,7 +139,6 @@ class DownloadController extends GetxController {
   }
 
   Future<void> deletePlaylist(String token) async {
-    debugPrint('deleting playlist..... for token $token');
     final playlist = songController.playlists.value[token]!;
     final songList = playlist.songs;
     final downloadedList =
@@ -149,7 +151,6 @@ class DownloadController extends GetxController {
   }
 
   Future<void> deleteArtistTopSongs(String token) async {
-    debugPrint('deleting playlist..... for token $token');
     final playlist = songController.artistDetails.value[token]!;
     final songList = playlist.topSongs;
     final downloadedList =
@@ -215,7 +216,6 @@ class DownloadController extends GetxController {
     downloadProgress.bindStream(_port.asBroadcastStream());
     for (final value
         in downloadBox.values.map((e) => DownloadedSong.fromMap(e))) {
-      debugPrint(value.status.toString());
       if (await File(value.fileLocation).exists()) {
         if (value.status != DownloadTaskStatus.complete) {
           if (value.status == DownloadTaskStatus.paused) {

@@ -1,4 +1,5 @@
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -30,7 +31,7 @@ class ArtistWidget extends GetView<SongController> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 image: DecorationImage(
-                  image: NetworkImage(artist.image),
+                  image: CachedNetworkImageProvider(artist.image),
                   fit: BoxFit.cover,
                 ),
               ),
