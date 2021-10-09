@@ -53,6 +53,5 @@ class AppController extends GetxController {
     scrollController.addListener(() {
       fab.value = buildFab();
     });
-    currentIndex = 1;
   }
 }

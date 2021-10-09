@@ -6,7 +6,6 @@ import 'package:audio_service/audio_service.dart';
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
 import 'package:awesome_music_rebased/utils/constants.dart';
 import 'package:awesome_music_rebased/utils/extensions.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -88,9 +87,15 @@ class DownloadController extends GetxController {
   bool isDownloaded(Song song) {
     final downloadedList =
         downloadBox.values.map((e) => DownloadedSong.fromMap(e));
-
     return downloadedList
         .any((downloaded) => downloaded.mediaUrl == song.mediaURL);
+  }
+
+  DownloadedSong fromSongToDownloadedSong(Song song) {
+    final downloadedList =
+        downloadBox.values.map((e) => DownloadedSong.fromMap(e)).toList();
+    return downloadedList
+        .firstWhere((downloaded) => downloaded.mediaUrl == song.mediaURL);
   }
 
   Future<void> _handleDownloadProgressChanged(dynamic data) async {

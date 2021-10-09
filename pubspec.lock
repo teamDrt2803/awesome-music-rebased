@@ -378,9 +378,9 @@ packages:
   jiosaavn_wrapper:
     dependency: "direct main"
     description:
-      name: jiosaavn_wrapper
-      url: "https://pub.dartlang.org"
-    source: hosted
+      path: "../jiosaavn_wrapper"
+      relative: true
+    source: path
     version: "0.0.2+17"
   js:
     dependency: transitive
@@ -620,6 +620,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.2"
+  shifting_tabbar:
+    dependency: "direct main"
+    description:
+      name: shifting_tabbar
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.2"
   show_up_animation:
     dependency: "direct main"
     description:

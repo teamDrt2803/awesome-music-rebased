@@ -28,7 +28,7 @@ abstract class GetView3<T, T2, T3> extends StatelessWidget {
   Widget build(BuildContext context);
 }
 
-abstract class GetView4<T, T2, T3> extends StatefulWidget {
+abstract class GetView4<T, T2, T3, T4> extends StatelessWidget {
   const GetView4({Key? key}) : super(key: key);
 
   // ignore: avoid_field_initializers_in_const_classes
@@ -37,7 +37,8 @@ abstract class GetView4<T, T2, T3> extends StatefulWidget {
   T get controller => GetInstance().find<T>(tag: tag)!;
   T2 get controller2 => GetInstance().find<T2>(tag: tag)!;
   T3 get controller3 => GetInstance().find<T3>(tag: tag)!;
+  T4 get controller4 => GetInstance().find<T4>(tag: tag)!;
 
   @override
-  State<StatefulWidget> createState();
+  Widget build(BuildContext context);
 }
