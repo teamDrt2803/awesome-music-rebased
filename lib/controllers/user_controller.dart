@@ -1,5 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:awesome_music_rebased/controllers/auth_controller.dart';
+import 'package:awesome_music_rebased/controllers/songs_controller.dart';
 import 'package:awesome_music_rebased/model/favourite_playlist.dart';
 import 'package:awesome_music_rebased/model/favourite_song.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -129,7 +130,11 @@ class UserController extends GetxController with SingleGetTickerProviderMixin {
     favouriteSongs.bindStream(streamFavouriteSongs);
   }
 
-  void signOut() => authController.simplerLogin.signOut();
+  Future<void> signOut() async {
+    final controller = Get.find<SongController>();
+    controller.audioHandler.stop();
+    await authController.simplerLogin.signOut();
+  }
 
   @override
   void onReady() {
