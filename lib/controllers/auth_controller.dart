@@ -1,4 +1,5 @@
 import 'package:awesome_music_rebased/controllers/app_controllers.dart';
+import 'package:awesome_music_rebased/controllers/user_controller.dart';
 import 'package:awesome_music_rebased/utils/routes/routes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -30,9 +31,7 @@ class AuthController extends GetxController {
       isSigningUp.value && authType.value == AuthType.google;
   bool get isLoggingInbyPhone =>
       isSigningUp.value && authType.value == AuthType.phone;
-
   bool get hasError => errorStream.value != null;
-
   String? get currentError => errorStream.value;
 
   Future<void> signInWithGoogle() async {
@@ -49,7 +48,7 @@ class AuthController extends GetxController {
       email: emailController.text,
       password: passwordController.text,
       onError: (error) {
-        debugPrint(error);
+        errorStream.value = error;
       },
     );
     isSigningUp.value = false;
@@ -93,15 +92,15 @@ class AuthController extends GetxController {
     /// TODO: Bind userdata stream from firestore in the [UserController]
     if (user?.uid == null && Get.currentRoute != Routes.login) {
       ///Only navigates if current route is not login screen
-      Get.toNamed(Routes.login);
+      Get.offNamed(Routes.login);
     } else {
       _handleAuthTypeChange(authType.value);
+      Get.find<UserController>().handleSignIn();
 
       ///Checks if the current route is home
       ///If not then route the app to homescreen
       if (Get.currentRoute != Routes.home) {
-        Get.find<AppController>().currentIndex = 1;
-        Get.toNamed(Routes.home);
+        Get.offNamed(Routes.home);
       }
     }
   }

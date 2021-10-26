@@ -1,5 +1,4 @@
 import 'package:awesome_music_rebased/controllers/app_controllers.dart';
-import 'package:awesome_music_rebased/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -17,8 +16,8 @@ class NavigationBar extends GetView<AppController> {
           elevation: 10,
           backgroundColor: Colors.white,
           currentIndex: controller.currentIndex,
-          selectedItemColor: colorBrandPrimaryLight,
-          unselectedItemColor: kSecondaryColor,
+          selectedItemColor: Colors.black,
+          unselectedItemColor: Colors.grey,
           showSelectedLabels: true,
           showUnselectedLabels: false,
           onTap: (index) => controller.currentIndex = index,

@@ -1,5 +1,6 @@
 import 'package:awesome_music_rebased/controllers/download_controller.dart';
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
+import 'package:awesome_music_rebased/model/downloaded_song.dart';
 import 'package:awesome_music_rebased/utils/extensions.dart';
 import 'package:awesome_music_rebased/widgets/cust_app_bar.dart';
 import 'package:awesome_music_rebased/widgets/get_view_2.dart';

@@ -1,7 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
 import 'package:awesome_music_rebased/utils/constants.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
@@ -80,8 +79,7 @@ class AudioPlayerHandler extends BaseAudioHandler
   @override
   Future<void> stop() async {
     super.stop();
-    await audioPlayer.pause();
-    await audioPlayer.seek(Duration.zero);
+    await audioPlayer.stop();
   }
 
   @override
@@ -94,15 +92,16 @@ class AudioPlayerHandler extends BaseAudioHandler
   Future<void> addQueueItems(List<MediaItem> mediaItems) async {
     if (audioPlayer.audioSource != null) {
       await (audioPlayer.audioSource! as ConcatenatingAudioSource).addAll(
-        mediaItems.map((m) {
-          debugPrint(m.id);
-          return AudioSource.uri(
-            ((m.extras?['download'] as bool?) ?? false)
-                ? Uri.file(m.id)
-                : Uri.parse(m.id),
-            tag: m,
-          );
-        }).toList(),
+        [
+          ...mediaItems.map((m) {
+            return AudioSource.uri(
+              ((m.extras?['download'] as bool?) ?? false)
+                  ? Uri.file(m.id)
+                  : Uri.parse(m.id),
+              tag: m,
+            );
+          })
+        ],
       );
     } else {
       try {
@@ -120,9 +119,7 @@ class AudioPlayerHandler extends BaseAudioHandler
             ],
           ),
         );
-      } on PlatformException catch (_) {
-        debugPrintStack();
-      }
+      } on PlatformException catch (_) {}
     }
   }
 
