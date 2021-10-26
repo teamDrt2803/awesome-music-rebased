@@ -1,6 +1,6 @@
 name: awesome_music_rebased
 description: A new Flutter project.
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 environment:
   sdk: ">=2.12.0 <3.0.0"
@@ -18,7 +18,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_cache: ^0.1.0
-  flutter_downloader: 
+  flutter_downloader:
     git:
       url: https://github.com/fluttercommunity/flutter_downloader.git
       ref: 2b7b528585af4c5c0b61e818e425735182e50e1d
@@ -51,7 +51,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - 'assets/lottie/'
+    - "assets/lottie/"
 
 flutter_icons:
   android: "launcher_icon"
