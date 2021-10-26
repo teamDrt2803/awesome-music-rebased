@@ -2,7 +2,7 @@ import 'package:awesome_music_rebased/controllers/app_controllers.dart';
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
 import 'package:awesome_music_rebased/views/home/tabs/account.dart';
 import 'package:awesome_music_rebased/views/home/tabs/discover.dart';
-import 'package:awesome_music_rebased/views/home/tabs/playlists.dart';
+import 'package:awesome_music_rebased/views/home/tabs/playlists/playlists.dart';
 import 'package:awesome_music_rebased/views/home/tabs/search.dart';
 import 'package:awesome_music_rebased/widgets/get_view_2.dart';
 import 'package:awesome_music_rebased/widgets/mini_player.dart';

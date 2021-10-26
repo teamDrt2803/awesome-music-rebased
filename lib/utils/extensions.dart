@@ -69,10 +69,7 @@ extension SongExtensions on Song {
         duration: duration,
         artUri: imageURI,
         displaySubtitle: subtitle,
-        extras: {
-          'hasLyrics': hasLyrics,
-          'lyrics': lyrics,
-        },
+        extras: {'hasLyrics': hasLyrics, 'lyrics': lyrics},
       );
 }
 

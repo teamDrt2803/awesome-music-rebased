@@ -1,4 +1,5 @@
 import 'package:audio_service/audio_service.dart';
+import 'package:awesome_music_rebased/controllers/download_controller.dart';
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
 import 'package:awesome_music_rebased/controllers/user_controller.dart';
 import 'package:awesome_music_rebased/widgets/cust_app_bar.dart';
@@ -13,7 +14,8 @@ import 'package:get/get_state_manager/get_state_manager.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:marquee/marquee.dart';
 
-class FullScreenPlayer extends GetView2<SongController, UserController> {
+class FullScreenPlayer
+    extends GetView3<SongController, UserController, DownloadController> {
   const FullScreenPlayer({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
@@ -23,6 +25,10 @@ class FullScreenPlayer extends GetView2<SongController, UserController> {
         final topColor = controller.topColor;
         final bottomColor = controller.bottomColor;
         final textColor = controller.textColor;
+        final bool downloaded = song.extras?['download'] as bool? ?? false;
+        final isSongfavourite = controller2.isSongFavourite(
+          downloaded ? song.extras!['mediaUrl'] as String : song.id,
+        );
         return Scaffold(
           appBar: CustAppBar(
             bgColor: topColor,
@@ -177,13 +183,13 @@ class FullScreenPlayer extends GetView2<SongController, UserController> {
                     ),
                     trailing: IconButton(
                       onPressed: () {
-                        if (controller2.isSongFavourite(song.id)) {
+                        if (isSongfavourite) {
                           controller2.deleteFromFavouriteSong<MediaItem>(song);
                         } else {
                           controller2.addToFavouriteSong<MediaItem>(song);
                         }
                       },
-                      icon: controller2.isSongFavourite(song.id)
+                      icon: isSongfavourite
                           ? Icon(Icons.favorite, color: textColor)
                           : const Icon(Icons.favorite_border),
                       color: textColor,

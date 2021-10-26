@@ -2,6 +2,7 @@ import 'package:awesome_music_rebased/controllers/app_controllers.dart';
 import 'package:awesome_music_rebased/controllers/download_controller.dart';
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
 import 'package:awesome_music_rebased/controllers/user_controller.dart';
+import 'package:awesome_music_rebased/model/downloaded_song.dart';
 import 'package:awesome_music_rebased/utils/extensions.dart';
 import 'package:awesome_music_rebased/widgets/get_view_2.dart';
 import 'package:awesome_music_rebased/widgets/mini_player.dart';

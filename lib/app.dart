@@ -13,11 +13,7 @@ class AwesomeMusic extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        if (FocusManager.instance.primaryFocus != null) {
-          FocusManager.instance.primaryFocus!.unfocus();
-        }
-      },
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: GetMaterialApp(
         showPerformanceOverlay: kProfileMode,
         debugShowCheckedModeBanner: false,

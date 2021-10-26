@@ -8,10 +8,10 @@ import 'package:get/instance_manager.dart';
 class InitialBindings extends Bindings {
   @override
   void dependencies() {
-    Get.put(AuthController(), permanent: true);
-    Get.put(UserController(), permanent: true);
-    Get.put(SongController(), permanent: true);
-    Get.put(AppController(), permanent: true);
-    Get.put(DownloadController(), permanent: true);
+    Get.put(AuthController());
+    Get.put(UserController());
+    Get.put(SongController());
+    Get.put(AppController());
+    Get.put(DownloadController());
   }
 }

@@ -4,6 +4,8 @@ import 'dart:ui';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
+import 'package:awesome_music_rebased/model/download_callback.dart';
+import 'package:awesome_music_rebased/model/downloaded_song.dart';
 import 'package:awesome_music_rebased/utils/constants.dart';
 import 'package:awesome_music_rebased/utils/extensions.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -33,6 +35,7 @@ class DownloadController extends GetxController {
         savedDir: getLocalPath,
         fileName: song.id.split('/').last,
         openFileFromNotification: false,
+        showNotification: false,
       );
       if (taskId != null) {
         await downloadBox.put(
@@ -51,7 +54,7 @@ class DownloadController extends GetxController {
             filename: song.id.split('/').last,
           ).toMap(),
         );
-      } else {}
+      }
     } else if (song is SongSearchResult) {
       final songResult = await songController.jioSaavnWrapper
           .fetchSongDetails(songId: song.id);
@@ -99,7 +102,7 @@ class DownloadController extends GetxController {
   }
 
   Future<void> _handleDownloadProgressChanged(dynamic data) async {
-    final downloadCallback = DownloadCallback.from(data as List);
+    final downloadCallback = DownloadCallbackParse.from(data as List);
     if (downloadBox.containsKey(downloadCallback.id)) {
       final downloadedSong =
           DownloadedSong.fromMap(downloadBox.get(downloadCallback.id));
@@ -180,11 +183,6 @@ class DownloadController extends GetxController {
       (downloadPath.value?.path ?? '') + Platform.pathSeparator;
 
   @override
-  Future<void> onInit() async {
-    super.onInit();
-  }
-
-  @override
   Future<void> onReady() async {
     super.onReady();
     downloadPath.value = await getApplicationDocumentsDirectory();
@@ -260,159 +258,3 @@ void downloadCallback(String id, DownloadTaskStatus status, int progress) {
   final SendPort? send = IsolateNameServer.lookupPortByName(downloadPortName);
   send?.send([id, status, progress]);
 }
-
-class DownloadCallback {
-  final String id;
-  final DownloadTaskStatus status;
-  final int progress;
-
-  DownloadCallback({
-    required this.id,
-    required this.status,
-    required this.progress,
-  });
-
-  factory DownloadCallback.from(List data) {
-    return DownloadCallback(
-      id: data[0] as String,
-      status: data[1] as DownloadTaskStatus,
-      progress: data[2] as int,
-    );
-  }
-}
-
-class DownloadedSong {
-  final String taskId;
-  final String mediaUrl;
-  final String title;
-  final String subtitle;
-  final String? description;
-  final DownloadTaskStatus status;
-  final int downloadProgress;
-  final String imageUrl;
-  final int duration;
-  final bool hasLyrics;
-  final String? lyrics;
-  final String filename;
-
-  DownloadedSong({
-    required this.taskId,
-    required this.mediaUrl,
-    required this.title,
-    required this.subtitle,
-    required this.description,
-    required this.status,
-    required this.downloadProgress,
-    required this.imageUrl,
-    required this.duration,
-    required this.filename,
-    this.hasLyrics = false,
-    this.lyrics,
-  });
-
-  Map<String, dynamic> toMap() => {
-        'taskId': taskId,
-        'mediaUrl': mediaUrl,
-        'title': title,
-        'subtitle': subtitle,
-        'descripton': description,
-        'status': status.value,
-        'downloadProgress': downloadProgress,
-        'imageUrl': imageUrl,
-        'hasLyrics': hasLyrics,
-        'lyrics': lyrics,
-        'duration': duration,
-        'filename': filename,
-      };
-
-  factory DownloadedSong.fromMap(dynamic map) {
-    return DownloadedSong(
-      taskId: map['taskId'] as String,
-      mediaUrl: map['mediaUrl'] as String,
-      title: map['title'] as String,
-      subtitle: map['subtitle'] as String,
-      description: map['description'] as String?,
-      status: DownloadTaskStatus.from(map['status'] as int),
-      downloadProgress: map['downloadProgress'] as int,
-      imageUrl: map['imageUrl'] as String,
-      duration: map['duration'] as int,
-      hasLyrics: map['hasLyrics'] as bool,
-      lyrics: map['lyrics'] as String?,
-      filename: map['filename'] as String,
-    );
-  }
-
-  DownloadedSong copyWith({
-    String? taskId,
-    String? mediaUrl,
-    String? title,
-    String? subtitle,
-    String? description,
-    DownloadTaskStatus? status,
-    int? downloadProgress,
-    String? imageUrl,
-    int? duration,
-    bool? hasLyrics,
-    String? lyrics,
-    String? filename,
-  }) =>
-      DownloadedSong(
-        taskId: taskId ?? this.taskId,
-        mediaUrl: mediaUrl ?? this.mediaUrl,
-        title: title ?? this.title,
-        subtitle: subtitle ?? this.subtitle,
-        description: description ?? this.description,
-        status: status ?? this.status,
-        downloadProgress: downloadProgress ?? this.downloadProgress,
-        imageUrl: imageUrl ?? this.imageUrl,
-        duration: duration ?? this.duration,
-        hasLyrics: hasLyrics ?? this.hasLyrics,
-        lyrics: lyrics ?? lyrics,
-        filename: filename ?? this.filename,
-      );
-
-  String get fileLocation =>
-      Get.find<DownloadController>().getLocalPath + filename;
-
-  MediaItem get mediaItem => MediaItem(
-        id: fileLocation,
-        title: title,
-        artUri: Uri.parse(imageUrl),
-        displaySubtitle: subtitle,
-        displayDescription: description,
-        duration: Duration(seconds: duration),
-        displayTitle: title,
-        extras: {
-          'mediaUrl': mediaUrl,
-          'hasLyrics': hasLyrics,
-          'lyrics': lyrics,
-          'taskId': taskId,
-          'fileLocation': fileLocation,
-          'download': true,
-          'filename': filename,
-        },
-      );
-  Song get song => Song(
-        id: fileLocation,
-        albumId: '',
-        album: '',
-        label: '',
-        title: title,
-        subtitle: subtitle,
-        lowResImage: imageUrl.lowRes,
-        mediumResImage: imageUrl.mediumRes,
-        highResImage: imageUrl.highRes,
-        imageURI: Uri.parse(imageUrl),
-        playCount: 0,
-        year: 2021,
-        permaURL: '',
-        hasLyrics: hasLyrics,
-        copyRightText: '',
-        mediaURL: mediaUrl,
-        duration: Duration(seconds: duration),
-        releaseDate: DateTime(2021),
-        allArtists: [],
-      );
-}
-
-//flutter: File name is  /var/mobile/Containers/Data/Application/B91A88C1-A65F-42A9-A3A5-C7088AEB1F32/Documents/115d5cb9924b84b4b8ff3a5a4d732ef1_96.mp4

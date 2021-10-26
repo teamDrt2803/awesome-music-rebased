@@ -28,7 +28,7 @@ dependencies:
   google_fonts: ^2.1.0
   hive: ^2.0.4
   hive_flutter: ^1.1.0
-  jiosaavn_wrapper: 
+  jiosaavn_wrapper:
     # git: https://github.com/teamDrt280320/jiosaavn_wrapper
     path: ../jiosaavn_wrapper
   just_audio: ^0.9.11
@@ -40,7 +40,6 @@ dependencies:
   palette_generator: ^0.3.1
   path_provider: ^2.0.5
   permission_handler: ^8.1.6
-  shifting_tabbar: ^1.0.2
   show_up_animation: ^2.0.0
   simpler_login: ^0.0.1+12
 
