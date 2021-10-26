@@ -1,4 +1,5 @@
 import 'package:audio_service/audio_service.dart';
+import 'package:awesome_music_rebased/controllers/app_controllers.dart';
 import 'package:awesome_music_rebased/controllers/auth_controller.dart';
 import 'package:awesome_music_rebased/controllers/songs_controller.dart';
 import 'package:awesome_music_rebased/model/favourite_playlist.dart';
@@ -134,6 +135,7 @@ class UserController extends GetxController with SingleGetTickerProviderMixin {
     final controller = Get.find<SongController>();
     controller.audioHandler.stop();
     await authController.simplerLogin.signOut();
+    Get.find<AppController>().currentIndex = 0;
   }
 
   @override

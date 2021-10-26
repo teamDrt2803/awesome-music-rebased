@@ -35,6 +35,7 @@ class DownloadController extends GetxController {
         savedDir: getLocalPath,
         fileName: song.id.split('/').last,
         openFileFromNotification: false,
+        showNotification: false,
       );
       if (taskId != null) {
         await downloadBox.put(
@@ -53,7 +54,7 @@ class DownloadController extends GetxController {
             filename: song.id.split('/').last,
           ).toMap(),
         );
-      } else {}
+      }
     } else if (song is SongSearchResult) {
       final songResult = await songController.jioSaavnWrapper
           .fetchSongDetails(songId: song.id);
@@ -180,11 +181,6 @@ class DownloadController extends GetxController {
 
   String get getLocalPath =>
       (downloadPath.value?.path ?? '') + Platform.pathSeparator;
-
-  @override
-  Future<void> onInit() async {
-    super.onInit();
-  }
 
   @override
   Future<void> onReady() async {
